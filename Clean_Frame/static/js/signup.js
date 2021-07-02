@@ -10,6 +10,8 @@ function validate() {
         fader('#myerror')
         return false;
     }
+    document.getElementById('email').value=email.toLowerCase()
+    email = document.getElementById('email').value
     username = document.getElementById('username').value
     if(username==""){
         document.getElementById("myerror").innerHTML="Username must not be empty."
@@ -71,6 +73,7 @@ function validate_passwords() {
         fader('#myerror')
         return false;
     }
+    document.getElementById('email1').value=email.toLowerCase()
     username = document.getElementById('username1').value
     if(username==""){
         document.getElementById("myerror").innerHTML="Username must not be empty."

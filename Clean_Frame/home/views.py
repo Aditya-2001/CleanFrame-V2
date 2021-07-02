@@ -197,12 +197,16 @@ def signup(request):
                 return JsonResponse({"error": "This email is already registered"}, status=400)
             user.delete()
         if username_in_use(username):
-            return JsonResponse({"error": "Username is already in use"}, status=400)
+            user=User.objects.get(username=username)
+            if user.is_active==True:
+                return JsonResponse({"error": "Username is already in use"}, status=400)
+            user.delete()
         form = UserForm(request.POST)
         if form.is_valid():
             form.save()
             user=User.objects.get(email=email)
             user.is_active=False
+            user.email=email
             user.save()
         else:
             return JsonResponse({"error": str(form.errors)}, status=400)
@@ -210,7 +214,7 @@ def signup(request):
             profile=StudentProfile.objects.create(user=user)
         else:
             profile=CompanyProfile.objects.create(user=user)
-        unique_code=generate_code(50)
+        unique_code=username+generate_code(50)
         profile.unique_code=unique_code
         profile.save()
         url=settings.BASE_URL+'/signup/verify/'+unique_code
@@ -259,7 +263,7 @@ def signup_verification(request, code):
         return render(request, 'home/signup_page.html', context={"code_message": "Account submitted for verification Successfully"})
     else:
         unique_code=generate_code(50)
-        profile.unique_code=unique_code
+        profile.unique_code=profile.user.username+unique_code
         profile.save()
         url=settings.BASE_URL+'/signup/verify/'+unique_code
         subject = 'Signup Request detected in Clean Frame'

@@ -22,12 +22,14 @@ from django.utils.html import strip_tags
 from email.mime.image import MIMEImage
 from django.contrib.staticfiles import finders
 from functools import lru_cache
+from django.http import JsonResponse
+from django.core import serializers
 
 
-def email(request):
-    message =f'Your account has been banned temporarily for days.<br> Account is banned by, contact this email for any query.'
-    user_name=f'fdsfsf'
-    return render(request,'home/email.html',{'user_name': user_name, 'message':message})
+# def email(request):
+#     message =f'Your account has been banned temporarily for days.<br> Account is banned by, contact this email for any query.'
+#     user_name=f'fdsfsf'
+#     return render(request,'home/email.html',{'user_name': user_name, 'message':message})
 
 class Email_thread(Thread):
     def __init__(self,subject,message,email):
@@ -439,7 +441,7 @@ def login_request(request):
             if user is not None:
                 pass
             else:
-                return render(request,"home/login_page.html",context={"useremail": useremail, "error": "Password is wrong"})
+                return JsonResponse({"error": "Invalid Credentials"}, status=400)
         except:
             try:
                 checker = User.objects.get(email=useremail)
@@ -447,28 +449,28 @@ def login_request(request):
                 if user is not None:
                     pass
                 else:
-                    return render(request,"home/login_page.html",context={"useremail": useremail, "error": "Password is wrong"})
+                    return JsonResponse({"error": "Invalid Credentials"}, status=400)
             except:
-                return render(request,"home/login_page.html",context={"error": "Invalid username/ email"})
+                return JsonResponse({"error": "Invalid Credentials"}, status=400)
         if user.is_active==False:
-            return render(request,"home/login_page.html",context={"error": "Email Address has not been verified."})
+            return JsonResponse({"error": "Email Address has not been verified."}, status=400)
         if user.is_superuser or user.is_staff:
             login(request,user)
-            return take_me_to_backend(request)
+            return JsonResponse({"success": "Login is Successful."}, status=200)            
         if user.last_name==settings.COMPANY_MESSAGE:
             try:
                 s=CompanyProfile.objects.get(user=user)
             except:
-                return redirect('signup_company')
+                return JsonResponse({"error": "Profile not found, signup again!!"}, status=400)
         else:
             try:
                 s=StudentProfile.objects.get(user=user)
             except:
-                return redirect('signup_student')
+                return JsonResponse({"error": "Profile not found, signup again!!"}, status=400)
         if s.verified==False:
-            return render(request,"home/login_page.html",context={"error": "Your email has not yet verified, if you think its mistake then contact administrator."})
+            return JsonResponse({"error": "Your email has not yet verified, if you think its mistake then contact administrator."}, status=400)
         if s.account_banned_permanent:
-            return render(request,"home/login_page.html",context={"error": "This account has been banned permanently."})
+            return JsonResponse({"error": "This account has been banned permanently."}, status=400)
         if s.account_banned_temporary:
             try:
                 prev_time=s.account_ban_date
@@ -491,11 +493,11 @@ def login_request(request):
                     s.account_banned_temporary=False
                     s.save()
                 else:
-                    return render(request,"home/login_page.html",context={"error": "This account has been banned on "+str(s.account_ban_date)+" for "+str(s.account_ban_time)+" days."})
+                    return JsonResponse({"error": "This account has been banned on "+str(s.account_ban_date)+" for "+str(s.account_ban_time)+" days."}, status=400)
             except:
-                return render(request,"home/login_page.html",context={"error": "This account has been banned for some days."})
+                return JsonResponse({"error": "This account has been banned for some days."}, status=400)
         login(request, user)
-        return take_me_to_backend(request)
+        return JsonResponse({"success": "Login is Successful."}, status=200)
     else:
         return render(request,'home/login_page.html',context={})
 

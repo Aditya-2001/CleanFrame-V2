@@ -15,7 +15,6 @@ urlpatterns = [
     path('signup/company/verify/resendotp/<str:email>',signup_company_resend_otp,name='signup_company_resend_otp'),
     path('logout/',logout_request,name='logout_request'),
     path('login/',login_request, name='login_request'),
-    # path('myemail/',email, name='email'),
     path('password/forgot/',forgot_password, name="forgot_password"),
     path('password/forgot/verify/otp/',forgot_password_verify_otp, name="forgot_password_verify_otp"),
     path('password/forgot/resend/otp/<str:email>', forgot_password_resend_otp, name='forgot_password_resend_otp'),

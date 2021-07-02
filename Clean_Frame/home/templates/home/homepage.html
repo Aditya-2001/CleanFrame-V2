@@ -88,7 +88,7 @@
                 <a href="{% url 'dashboard' %}" id="mybtnlink"><button class="btn">Dashboard</button></a>
                 <a href="{% url 'logout_request' %}" id="mybtnlink"><button class="btn">Logout</button></a> {% else %}
                 <a href="{% url 'login_request' %}" id="mybtnlink"><button class="btn">Login</button></a>
-                <a href="{% url 'signup_student' %}" id="mybtnlink"><button class="btn">SignUp</button></a> {% endif %}
+                <a href="{% url 'signup' %}" id="mybtnlink"><button class="btn">SignUp</button></a> {% endif %}
                 <p style="color: white; " id="disappear">{{info}}</p>
             </div>
         </section>

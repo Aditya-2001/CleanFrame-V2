@@ -147,6 +147,8 @@ OTP_EXPIRE_TIME=16
 COMPANY_MESSAGE='This_is_a_company_Associated_account'
 SEPARATOR='**'
 
+BASE_URL="127.0.0.1:8000"
+
 TEMORARY_BAN_TIME=30
 
 USE_TZ=True

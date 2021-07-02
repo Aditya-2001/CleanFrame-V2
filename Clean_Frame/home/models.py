@@ -22,6 +22,8 @@ class StudentProfile(models.Model):
     otp_time=models.DateTimeField(default=datetime.datetime.now())
     otp=models.CharField(max_length=100, null=True)
     got_internship=models.BooleanField(default=False)
+    unique_code=models.CharField(max_length=100, null=True)
+    unique_code_time=models.DateTimeField(default=datetime.datetime.now())
 
     def __str__(self):
         if self.user:
@@ -44,6 +46,8 @@ class CompanyProfile(models.Model):
     verified=models.BooleanField(default=False)
     otp_time=models.DateTimeField(default=datetime.datetime.now())
     otp=models.CharField(max_length=100, null=True)
+    unique_code=models.CharField(max_length=100, null=True)
+    unique_code_time=models.DateTimeField(default=datetime.datetime.now())
 
     def __str__(self):
         if self.user:

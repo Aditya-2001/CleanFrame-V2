@@ -562,7 +562,7 @@ def student_account_signup_permit(request):
         permissions=get_permissions(request)
         if permissions.can_access_student_inactive_accounts==False:
             return redirect('dashboard')
-        data=StudentProfile.objects.filter(verified=False, account_banned_permanent=False,  account_banned_temporary=False).order_by('signup_date')
+        data=StudentProfile.objects.filter(verified=False, account_banned_permanent=False,  account_banned_temporary=False, user__is_active=True).order_by('signup_date')
         return render(request,'dashboard/student_accounts.html',context={ "permissions": get_permissions(request), "data": data})
     return error_detection(request,1)
 
@@ -602,7 +602,7 @@ def student_account_signup_action(request,type,item):
                     Email_thread(subject,message,email).start()
             except:
                 code=0
-        data=StudentProfile.objects.filter(verified=False, account_banned_permanent=False,  account_banned_temporary=False).order_by('signup_date')
+        data=StudentProfile.objects.filter(verified=False, account_banned_permanent=False,  account_banned_temporary=False, user__is_active=True).order_by('signup_date')
         return render(request,'dashboard/student_accounts.html',context={ "permissions": get_permissions(request), "data": data, "code": code})
     return error_detection(request,1)
 
@@ -611,7 +611,7 @@ def company_account_signup_permit(request):
         permissions=get_permissions(request)
         if permissions.can_access_company_inactive_accounts==False:
             return redirect('dashboard')
-        data=CompanyProfile.objects.filter(verified=False, account_banned_permanent=False,  account_banned_temporary=False).order_by('signup_date')
+        data=CompanyProfile.objects.filter(verified=False, account_banned_permanent=False,  account_banned_temporary=False, user__is_active=True).order_by('signup_date')
         return render(request,'dashboard/company_accounts.html',context={ "permissions": get_permissions(request), "data": data})
     return error_detection(request,1)
 
@@ -651,7 +651,7 @@ def company_account_signup_action(request,type,item):
                     Email_thread(subject,message,email).start()
             except:
                 code=0
-        data=CompanyProfile.objects.filter(verified=False, account_banned_permanent=False,  account_banned_temporary=False).order_by('signup_date')
+        data=CompanyProfile.objects.filter(verified=False, account_banned_permanent=False,  account_banned_temporary=False, user__is_active=True).order_by('signup_date')
         return render(request,'dashboard/company_accounts.html',context={ "permissions": get_permissions(request), "data": data, "code": code})
     return error_detection(request,1)
 

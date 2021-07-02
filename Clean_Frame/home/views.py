@@ -186,112 +186,86 @@ def SENDMAIL(subject, message, email):
     # return render(request,'home/email.html',{'title':'send an email'})
     # send_mail( subject, message, email_from, recipient_list )
 
-def signup_student(request):
-    if request.user.is_authenticated != True:
-        return render(request, 'home/signup_page.html', context={'phase': 1, 'stu': True})
-    else:
-        return take_me_to_backend(request)
-
-def signup_student_verify(request):
-    if request.method=='POST':
+def signup(request):
+    if request.method=="POST":
+        signup_type=request.POST.get('signup_type')
         email=request.POST.get('email')
         username=request.POST.get('username')
-        first_name=request.POST.get('first_name')
-        last_name=request.POST.get('last_name')
         if email_in_use(email):
             user=User.objects.get(email=email)
             if user.is_active==True:
-                context={"f_name": first_name, "l_name": last_name, "phase": 1, "error": "Email is already in use", 'stu': True}
-                return render(request, 'home/signup_page.html', context)
+                return JsonResponse({"error": "This email is already registered"}, status=400)
             user.delete()
         if username_in_use(username):
-            context={"f_name": first_name, "l_name": last_name, "phase": 1, "error": "Username is already in use", 'stu': True}
-            return render(request, 'home/signup_page.html', context)
+            return JsonResponse({"error": "Username is already in use"}, status=400)
         form = UserForm(request.POST)
         if form.is_valid():
             form.save()
             user=User.objects.get(email=email)
             user.is_active=False
             user.save()
-        if signup_student_send_otp(email)==False:
-            return redirect('signup_student')
-        return render(request, 'home/signup_page.html', context={"phase": 2, "email": email, 'stu': True})
+        else:
+            return JsonResponse({"error": str(form.errors)}, status=400)
+        if int(signup_type)==1:
+            profile=StudentProfile.objects.create(user=user)
+        else:
+            profile=CompanyProfile.objects.create(user=user)
+        unique_code=generate_code(50)
+        profile.unique_code=unique_code
+        profile.save()
+        url=settings.BASE_URL+'/signup/verify/'+unique_code
+        subject = 'Signup Request detected in Clean Frame'
+        message = f'New signup request has been detected from your email. Click the given URL to confirm the signup '+ url + ' , and it expires in 15 minutes.'
+        Email_thread(subject,message,email).start()
+        return JsonResponse({"success": "Signup Successful"}, status=200)
     else:
-        return redirect('signup_student')
+        return render(request, 'home/signup_page.html', context={})
 
-def signup_student_verify_otp(request):
-    if request.method=='POST':
-        email=request.POST.get('email')
-        otp=request.POST.get('otp')
+def generate_code(length):
+    digits = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+    code = ""
+    for i in range(length) :
+        code += digits[math.floor(random.random() * 62)]
+    return code
+
+def signup_verification(request, code):
+    try:
+        profile=StudentProfile.objects.get(unique_code=code)
+    except:
         try:
-            user=User.objects.get(email=email)
-            u=StudentProfile.objects.get(user=user)
-            if str(u.otp) == str(otp):
-                prev_time=u.otp_time
-                u.otp_time=datetime.datetime.now()
-                u.save()
-                u=StudentProfile.objects.get(user=user)
-                new_time=u.otp_time
-                time_delta = (new_time-prev_time)
-                minutes = (time_delta.total_seconds())/60
-                if minutes<settings.OTP_EXPIRE_TIME:
-                    try:
-                        user=User.objects.get(email=email)
-                        user.is_active=True
-                        user.save()
-                        try:
-                            u=StudentProfile.objects.get(user=user)
-                            u.otp='NULL_akad_bakad_bambe_bo'
-                            u.signup_date=u.otp_time
-                            u.save()
-                            return render(request, 'home/signup_page.html', context={"phase": 3, "email": email, 'stu': True})
-                        except:
-                            return redirect('signup_student')
-                    except:
-                        return redirect('signup_student')
-                else:
-                    if signup_student_send_otp(email)==False:
-                        return redirect('signup_student')
-                    return render(request, 'home/signup_page.html', context={"phase": 2, "email": email, "time_limit_reached": True, 'stu': True})
-            else:
-                return render(request, 'home/signup_page.html', context={"phase": 2, "email": email, "invalid_otp": True, 'stu': True})
+            profile=CompanyProfile.objects.get(unique_code=code)
         except:
-            return render(request, 'home/signup_page.html', context={'phase': 1})
+            # To confuse hacker
+           return render(request, 'home/signup_page.html', context={"code_message": "Account submitted for verification Successfully"})
+    if profile.user.is_active:
+        return render(request, 'home/signup_page.html', context={"code_message": "Account submitted for verification Successfully"})
+    prev_time=profile.unique_code_time
+    profile.unique_code_time=datetime.datetime.now()
+    profile.save()
+    try:
+        profile=StudentProfile.objects.get(unique_code=code)
+    except:
+        profile=CompanyProfile.objects.get(unique_code=code)
+    new_time=profile.unique_code_time
+    time_delta = (new_time-prev_time)
+    minutes = (time_delta.total_seconds())/60
+    if minutes<settings.OTP_EXPIRE_TIME:
+        user=profile.user
+        user.is_active=True
+        user.save()
+        subject = 'Successful Signup in Clean Frame'
+        message = f'Your account has been submitted for verification to our backend staff.'
+        Email_thread(subject,message,profile.user.email).start()
+        return render(request, 'home/signup_page.html', context={"code_message": "Account submitted for verification Successfully"})
     else:
-        return redirect('signup_student')
-
-def signup_student_send_otp(email):
-    try:
-        user=User.objects.get(email=email)
-    except:
-        return False
-    otp=generate_otp()
-    subject = 'OTP for email verification in Clean Frame'
-    message = f'Thank you for creating account, your otp is ' + str(otp) + ', do not share it with anyone.<br>It will expire in 15 minutes.'
-    Email_thread(subject,message,email).start()
-    try:
-        u=StudentProfile.objects.get(user=user)
-        u.otp=str(otp)
-        u.otp_time=datetime.datetime.now()
-        u.save()
-    except:
-        u=StudentProfile.objects.create(user=user, otp=str(otp), otp_time=datetime.datetime.now())
-        u.save()
-    return True
-
-def signup_student_resend_otp(request,email):
-    email=str(email)
-    try:
-        user=User.objects.get(email=email)
-        try:
-            u=StudentProfile.objects.get(user=user)
-            if signup_student_send_otp(email)==False:
-                return redirect('signup_student')
-            return render(request, 'home/signup_page.html', context={"phase": 2, "email": email, 'stu': True})
-        except:
-            return redirect('signup_student')
-    except:
-        return redirect('signup_student')
+        unique_code=generate_code(50)
+        profile.unique_code=unique_code
+        profile.save()
+        url=settings.BASE_URL+'/signup/verify/'+unique_code
+        subject = 'Signup Request detected in Clean Frame'
+        message = f'Previous Link expired. Click the new URL to confirm the signup '+ url + ' , and it expires in 15 minutes.'
+        Email_thread(subject,message,profile.user.email).start()
+        return render(request, 'home/signup_page.html', context={"code_message": "This link is expired, we have send a new link, check it."})
 
 def generate_otp():
     digits = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
@@ -318,111 +292,6 @@ def take_me_to_backend(request):
 #to be modified
     return redirect('dashboard')
 
-def signup_company(request):
-    if request.user.is_authenticated != True:
-        return render(request, 'home/signup_page.html', context={'phase': 21})
-    else:
-        return take_me_to_backend(request)
-
-def signup_company_verify(request):
-    if request.method=='POST':
-        email=request.POST.get('email')
-        username=request.POST.get('username')
-        f_name=request.POST.get('first_name')
-        if email_in_use(email):
-            user=User.objects.get(email=email)
-            if user.is_active==True:
-                context={"f_name": f_name, "phase": 21, "error": "Email is already in use"}
-                return render(request, 'home/signup_page.html', context)
-            user.delete()
-        if username_in_use(username):
-            context={"f_name": f_name, "phase": 21, "error": "Username is already in use"}
-            return render(request, 'home/signup_page.html', context)
-        form = UserForm(request.POST)
-        if form.is_valid():
-            form.save()
-            user=User.objects.get(email=email)
-            user.is_active=False
-            user.save()
-        if signup_company_send_otp(email)==False:
-            return redirect('signup_company')
-        return render(request, 'home/signup_page.html', context={"phase": 22, "email": email})
-    else:
-        return redirect('signup_company')
-
-def signup_company_verify_otp(request):
-    if request.method=='POST':
-        email=request.POST.get('email')
-        otp=request.POST.get('otp')
-        try:
-            user=User.objects.get(email=email)
-            u=CompanyProfile.objects.get(user=user)
-            if str(u.otp) == str(otp):
-                prev_time=u.otp_time
-                u.otp_time=datetime.datetime.now()
-                u.save()
-                u=CompanyProfile.objects.get(user=user)
-                new_time=u.otp_time
-                time_delta = (new_time-prev_time)
-                minutes = (time_delta.total_seconds())/60
-                if minutes<settings.OTP_EXPIRE_TIME:
-                    try:
-                        user=User.objects.get(email=email)
-                        user.is_active=True
-                        user.save()
-                        try:
-                            u=CompanyProfile.objects.get(user=user)
-                            u.otp='NULL_akad_bakad_bambe_bo'
-                            u.signup_date=u.otp_time
-                            u.save()
-                            return render(request, 'home/signup_page.html', context={"phase": 23, "email": email})
-                        except:
-                            return redirect('signup_company')
-                    except:
-                        return redirect('signup_company')
-                else:
-                    if signup_company_send_otp(email)==False:
-                        return redirect('signup_company')
-                    return render(request, 'home/signup_page.html', context={"phase": 22, "email": email, "time_limit_reached": True})
-            else:
-                return render(request, 'home/signup_page.html', context={"phase": 22, "email": email, "invalid_otp": True})
-        except:
-            return render(request, 'home/signup_page.html', context={'phase': 21})
-    else:
-        return redirect('signup_company')
-
-def signup_company_resend_otp(request, email):
-    email=str(email)
-    try:
-        user=User.objects.get(email=email)
-        try:
-            u=CompanyProfile.objects.get(user=user)
-            if signup_company_send_otp(email)==False:
-                return redirect('signup_company')
-            return render(request, 'home/signup_page.html', context={"phase": 22, "email": email})
-        except:
-            return redirect('signup_company')
-    except:
-        return redirect('signup_company')
-
-def signup_company_send_otp(email):
-    try:
-        user=User.objects.get(email=email)
-    except:
-        return False
-    otp=generate_otp()
-    subject = 'OTP for email verification in Clean Frame'
-    message = f'Thank you for creating account, your otp is ' + str(otp) + ', do not share it with anyone.<br>It will expire in 15 minutes.'
-    Email_thread(subject,message,email).start()
-    try:
-        u=CompanyProfile.objects.get(user=user)
-        u.otp=str(otp)
-        u.otp_time=datetime.datetime.now()
-        u.save()
-    except:
-        u=CompanyProfile.objects.create(user=user, otp=str(otp))
-        u.save()
-    return True
 
 def logout_request(request):
     if request.user.is_authenticated:

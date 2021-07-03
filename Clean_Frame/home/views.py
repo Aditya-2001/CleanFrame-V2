@@ -214,13 +214,9 @@ def signup(request):
             profile=StudentProfile.objects.create(user=user)
         else:
             profile=CompanyProfile.objects.create(user=user)
-        unique_code=username+generate_code(50)
-        profile.unique_code=unique_code
-        profile.save()
-        url=settings.BASE_URL+'/signup/verify/'+unique_code
-        subject = 'Signup Request detected in Clean Frame'
-        message = f'New signup request has been detected from your email. Click the given URL to confirm the signup '+ url + ' , and it expires in 15 minutes.'
-        Email_thread(subject,message,email).start()
+        message = f'New signup request has been detected from your email. Click the given URL to confirm the signup '
+        if signup_send_notification(email,profile,message)==False:
+            return JsonResponse({"error": "Error in sending notification."},status=400)
         return JsonResponse({"success": "Signup Successful"}, status=200)
     else:
         return render(request, 'home/signup_page.html', context={})
@@ -231,6 +227,20 @@ def generate_code(length):
     for i in range(length) :
         code += digits[math.floor(random.random() * 62)]
     return code
+
+def signup_send_notification(email, p, message):
+    try:
+        code=p.user.username + generate_code(50)
+        url=settings.BASE_URL+'/signup/verify/'+code
+        subject = 'Signup Request detected in Clean Frame'
+        message+=url + ' , and it expires in 15 minutes.'
+        Email_thread(subject,message,email).start()
+        p.unique_code=str(code)
+        p.unique_code_time=datetime.datetime.now()
+        p.save()
+        return True
+    except:
+        return False
 
 def signup_verification(request, code):
     try:
@@ -262,13 +272,9 @@ def signup_verification(request, code):
         Email_thread(subject,message,profile.user.email).start()
         return render(request, 'home/signup_page.html', context={"code_message": "Account submitted for verification Successfully"})
     else:
-        unique_code=generate_code(50)
-        profile.unique_code=profile.user.username+unique_code
-        profile.save()
-        url=settings.BASE_URL+'/signup/verify/'+unique_code
-        subject = 'Signup Request detected in Clean Frame'
-        message = f'Previous Link expired. Click the new URL to confirm the signup '+ url + ' , and it expires in 15 minutes.'
-        Email_thread(subject,message,profile.user.email).start()
+        message = f'Previous Link expired. Click the new URL to confirm the signup '
+        if signup_send_notification(profile.user.email,profile,message)==False:
+            return JsonResponse({"error": "Error in sending notification."},status=400)
         return render(request, 'home/signup_page.html', context={"code_message": "This link is expired, we have send a new link, check it."})
 
 def generate_otp():
@@ -380,73 +386,86 @@ def forgot_password(request):
         try:
             u=User.objects.get(email=email)
             if u.is_active==False:
-                return render(request, 'home/forgot_password_page.html', context={'phase': 1, 'error': "The email associated with this account has not been verified.", 'email': email})
+                return JsonResponse({"error": "The email associated with this account has not been verified."}, status=400)
             if u.last_name=='This_is_a_company_Associated_account':
                 try:
                     p=CompanyProfile.objects.get(user=u)
                 except:
-                    return render(request, 'home/forgot_password_page.html', context={'phase': 1, 'error': "Getting error in searching this account profile in database. Contact Administrator", 'email': email})
+                    return JsonResponse({"error": "Getting error in searching this account profile in database. Contact Administrator"}, status=400)
             else:
                 try:
                     p=StudentProfile.objects.get(user=u)
                 except:
-                    return render(request, 'home/forgot_password_page.html', context={'phase': 1, 'error': "Getting error in searching this account profile in database. Contact Administrator", 'email': email})
+                    return JsonResponse({"error": "Getting error in searching this account profile in database. Contact Administrator"}, status=400)
             if p.verified==False:
-                return render(request, 'home/forgot_password_page.html', context={'phase': 1, 'error': "This account is in verification phase, you don not have permission to change password.", 'email': email})
+                return JsonResponse({"error": "This account is in verification phase, you do not have permission to change password."}, status=400)
             if p.account_banned_permanent==True:
-                return render(request, 'home/forgot_password_page.html', context={'phase': 1, 'error': "This account has been permanently ban, you don not have permission to change password.", 'email': email})
-            if forgot_password_send_otp(email, p)==False:
-                return render(request, 'home/forgot_password_page.html', context={'phase': 1, 'error': "Error in sending otp, contact adminstrator.", 'email': email})
-            return render(request, 'home/forgot_password_page.html', context={'phase': 2, 'email': email})
+                return JsonResponse({"error": "This account has been permanently banned, you don not have permission to change password."}, status=400)
+            message = f'We recently got a request to forgot your password in CleanFrame, click the URL to change your password '
+            if forgot_password_send_notification(email, p, message)==False:
+                return JsonResponse({"error": "Error in sending notification, contact adminstrator."}, status=400)
+            return JsonResponse({"success": "Notification send."}, status=200)
         except:
-            return render(request, 'home/forgot_password_page.html', context={'phase': 1, 'error': "There is no such account related with this email.", 'email': email})
+            return JsonResponse({"error": "There is no such account related with this email."}, status=400)
     else:
-        return render(request, 'home/forgot_password_page.html', context={'phase': 1})
+        return render(request, 'home/forgot_password_page.html', context={})
 
-def forgot_password_send_otp(email, p):
+def forgot_password_send_notification(email, p, message):
     try:
-        otp=generate_otp()
-        subject = 'OTP for reseting password in Clean Frame'
-        message = f'Your high security password reset otp is ' + str(otp) + ', do not share it with anyone.<br>It will expire in 15 minutes.'
+        code=p.user.username + generate_code(50)
+        url=settings.BASE_URL+'/password/forgot/'+'confirm/'+code
+        subject = 'Forgot Password request notification for reseting password in Clean Frame'
+        message+=url+', link will expire in 15 minutes.\nKindly ignore the message if request is not done by you.'
         Email_thread(subject,message,email).start()
-        p.otp=str(otp)
-        p.otp_time=datetime.datetime.now()
+        p.unique_code=str(code)
+        p.unique_code_time=datetime.datetime.now()
+        p.code_expired=False
         p.save()
         return True
     except:
         return False
 
-
-def forgot_password_verify_otp(request):
-    if request.method=='POST':
-        email=request.POST.get('email')
-        otp=request.POST.get('otp')
+def forgot_password_verification(request,code):
+    try:
+        profile=StudentProfile.objects.get(unique_code=code)
+    except:
         try:
-            user=User.objects.get(email=email)
-            u=user_type_checker(request, user, email)
-            if str(u.otp) == str(otp):
-                prev_time=u.otp_time
-                u.otp_time=datetime.datetime.now()
-                u.save()
-                u=user_type_checker(request, user, email)
-                new_time=u.otp_time
-                time_delta = (new_time-prev_time)
-                minutes = (time_delta.total_seconds())/60
-                if minutes<settings.OTP_EXPIRE_TIME:
-                    u.otp='NULL_akad_bakad_bambe_bo'
-                    u.save()
-                    return render(request, 'home/forgot_password_page.html', context={"phase": 3, "email": email})
-                else:
-                    u=user_type_checker(request, user, email)
-                    if forgot_password_send_otp(email, u)==False:
-                        return render(request, 'home/forgot_password_page.html', context={'phase': 1, 'error': "Error in resending otp since time limit has been reached, contact adminstrator.", 'email': email})
-                    return render(request, 'home/forgot_password_page.html', context={'phase': 2, 'email': email, "time_limit_reached": True})
-            else:
-                return render(request, 'home/forgot_password_page.html', context={'phase': 2, 'email': email, "invalid_otp": True})
+            profile=CompanyProfile.objects.get(unique_code=code)
         except:
-            return render(request, 'home/forgot_password_page.html', context={'phase': 1, 'error': "Internal error.", 'email': email})
+            # To confuse hacker
+           return render(request, 'home/forgot_password_page.html', context={"code_message": "Account was not found on this link.", "correct_link": False})
+    if profile.user.is_active==False:
+        return render(request, 'home/forgot_password_page.html', context={"code_message": "Account is not verified yet by staff.", "correct_link": False})
+    prev_time=profile.unique_code_time
+    profile.unique_code_time=datetime.datetime.now()
+    profile.save()
+    try:
+        profile=StudentProfile.objects.get(unique_code=code)
+    except:
+        profile=CompanyProfile.objects.get(unique_code=code)
+    new_time=profile.unique_code_time
+    time_delta = (new_time-prev_time)
+    minutes = (time_delta.total_seconds())/60
+    if minutes<settings.OTP_EXPIRE_TIME and profile.code_expired==False:
+        if request.method=="POST":
+            password=request.POST.get("password2")
+            user=profile.user
+            user.set_password(password)
+            user.save()
+            profile.code_expired=True
+            profile.save()
+            subject = 'Password Changed in Clean Frame'
+            message = f'Your password has been successfully changed in Clean Frame.'
+            Email_thread(subject,message,profile.user.email).start()
+            return JsonResponse({"success": "Password Changed."},status=200)
+        else:
+            return render(request, 'home/forgot_password_page.html', context={"email": profile.user.email, "code_message": "Enter your new password. If link is valid then password will be changed.", "correct_link": True})
     else:
-        return redirect('forgot_password')
+        message = f'Previous Link expired. Click the new URL to change your passord '
+        if forgot_password_send_notification(profile.user.email,profile,message)==False:
+            return render(request, 'home/forgot_password_page.html', context={"code_message": "Error in resending the notification.", "correct_link": False})
+        return render(request, 'home/forgot_password_page.html', context={"code_message": "This link is expired, we have send a new link, check it.", "correct_link": False})
+
 
 def user_type_checker(request, user, email):
     if user.last_name=='This_is_a_company_Associated_account':
@@ -460,34 +479,6 @@ def user_type_checker(request, user, email):
         except:
             return render(request, 'home/forgot_password_page.html', context={'phase': 1, 'error': "Getting error in searching this account profile in database. Contact Administrator", 'email': email})
     return u
-
-def forgot_password_resend_otp(request, email):
-    email=str(email)
-    try:
-        user=User.objects.get(email=email)
-        u=user_type_checker(request, user, email)
-        if forgot_password_send_otp(email, u)==False:
-            return render(request, 'home/forgot_password_page.html', context={'phase': 1, 'error': "Error in resending otp since time limit has been reached, contact adminstrator.", 'email': email})
-        return render(request, 'home/forgot_password_page.html', context={"phase": 2, "email": email})
-    except:
-        return redirect('forgot_password')
-
-def reset_password(request):
-    if request.method=="POST":
-        email=request.POST.get("email")
-        password=request.POST.get("password2")
-        try:
-            user=User.objects.get(email=email)
-            user.set_password(password)
-            user.save()
-        except:
-            return redirect('home')
-        subject = 'Password changed in Clean Frame'
-        message = f'Password has been successfully changed.'
-        Email_thread(subject,message,email).start()
-        return render(request, 'home/forgot_password_page.html', context={'phase': 4})
-    else:
-        return redirect('forgot_password')
 
 def error(request, message):
     return render(request,"home/error_page.html",context={"error": message})

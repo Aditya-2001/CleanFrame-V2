@@ -147,7 +147,8 @@ OTP_EXPIRE_TIME=16
 COMPANY_MESSAGE='This_is_a_company_Associated_account'
 SEPARATOR='**'
 
-BASE_URL="127.0.0.1:8000"
+BASE_URL="http://127.0.0.1:8000"
+# BASE_URL="https://clean-frame.herokuapp.com"
 
 TEMORARY_BAN_TIME=30
 

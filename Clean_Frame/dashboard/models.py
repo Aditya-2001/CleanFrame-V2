@@ -20,6 +20,7 @@ class StaffPermissions(models.Model):
     can_delete_staff_accounts=models.BooleanField(default=False)
     
     can_manage_sessions=models.BooleanField(default=False)
+    create_new_accounts=models.BooleanField(default=False)
     
     def __str__(self):
         if self.user:

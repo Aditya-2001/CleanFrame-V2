@@ -17,6 +17,7 @@ from django.utils.html import strip_tags
 from email.mime.image import MIMEImage
 from django.contrib.staticfiles import finders
 from functools import lru_cache
+import pandas as pd
 
 class Email_thread(Thread):
     def __init__(self,subject,message,email):
@@ -675,7 +676,7 @@ def new_announcement_round(request):
         if request.user.last_name!=settings.COMPANY_MESSAGE:
             return redirect('home')
         data=get_my_profile(request)
-        internships=Internship.objects.filter(company=request.user)
+        internships=Internship.objects.filter(company=request.user, session=current_session())
         prev_round_for_result=0
         if request.method == "POST":
             internship_name=request.POST.get('internship_name')
@@ -698,6 +699,9 @@ def new_announcement_round(request):
                     return render(request, 'dashboard/new_round.html', context={"data": data, "internships": internships, "error": "No student found whose previous round was cleared"})
             form = CompanyAnnouncementForm(request.POST,request.FILES)
             if form.is_valid():
+                internship=Internship.objects.get(id=int(internship_name))
+                if internship.session!=current_session():
+                    return render(request, 'dashboard/new_round.html', context={"data": data, "internships": internships, "error": "You can only choose an internship with active session"})
                 x=form.save()
                 myid=x.id
                 last_date_to_apply=request.POST.get('last_date_to_apply')
@@ -722,8 +726,8 @@ def new_announcement_round(request):
             else:
                 return render(request, 'dashboard/new_round.html', context={"data": data, "internships": internships, "error": form.errors})
         else:
-            internships=Internship.objects.filter(company=request.user)
-            return render(request, 'dashboard/new_round.html', context={"data": data, "internships": internships, "internships": internships})
+            internships=Internship.objects.filter(company=request.user, session=current_session())
+            return render(request, 'dashboard/new_round.html', context={"data": data, "internships": internships})
     return error_detection(request,1)
 
 def register_students_for_next_round(request, prev, new):
@@ -812,7 +816,7 @@ def edit_internship(request, item):
             try:
                 data=Internship.objects.get(id=int(item))
                 if data.company!=request.user:
-                    return error(request,"Announcement not found")
+                    return JsonResponse({"error": "Internship Not Found"}, status=400)
                 data.internship_name=request.POST.get('internship_name')
                 data.internship_duration=int(request.POST.get('duration'))
                 data.students_required=int(request.POST.get('number_of_students'))
@@ -821,9 +825,9 @@ def edit_internship(request, item):
                 data.stipend=float(request.POST.get('stipend'))
                 data.prerequisite=request.POST.get('pre')
                 data.save()
-                return render(request, 'dashboard/edit_internships.html', context={"data": data, "success": "Internship Details Updated"})
+                return JsonResponse({"success": "Internship Details Updated"}, status=200)
             except:
-                return error(request,"Error in details entered by you or Announcement not found")
+                return JsonResponse({"error": "Error in details entered by you or Announcement not found"}, status=400)
         else:
             try:
                 data=Internship.objects.get(id=int(item))
@@ -1613,6 +1617,95 @@ def create_company_account(request):
         else:
             return render(request,'dashboard1/new_company_account.html',context={"permissions": permissions})
     return error_detection(request,1)
+
+def create_accounts(request):
+    if error_detection(request,1)==False:
+        if request.user.is_staff==False and request.user.is_superuser==False:
+            return redirect('home')
+        try:
+            permissions=StaffPermissions.objects.get(user=request.user)
+            if permissions.create_new_accounts==False:
+                return error(request,"You don't have permission to access this page")
+        except:
+            StaffPermissions.objects.create(user=request.user)
+            return redirect('dashboard')
+        if request.method=="POST":
+            form=NewUserForm(request.POST,request.FILES)
+            if form.is_valid():
+                file=form.cleaned_data['file']
+                if str(file).endswith('.csv'):
+                    # csv file
+                    data=pd.read_csv(file)
+                elif str(file).endswith('.xlsx'):
+                    # excel file
+                    data=pd.read_excel(file)
+                else:
+                    return render(request,'dashboard1/create_accounts.html',context={"permissions": permissions, "error": "Not an excel or csv file"})        
+                return create_accounts_helper(request,data,permissions)
+            return render(request,'dashboard1/create_accounts.html',context={"permissions": permissions, "error": str(form.errors)})
+        else:
+            return render(request,'dashboard1/create_accounts.html',context={"permissions": permissions})
+    return error_detection(request,1)
+
+def create_accounts_helper(request,data,permissions):
+    if 'Email' not in data.columns:
+        return render(request,'dashboard1/create_accounts.html',context={"permissions": permissions, "error": "Email column was not found in the file."})
+    if 'Username' not in data.columns:
+        return render(request,'dashboard1/create_accounts.html',context={"permissions": permissions, "error": "Username column was not found in the file."})
+    if 'Account Type' not in data.columns:
+        return render(request,'dashboard1/create_accounts.html',context={"permissions": permissions, "error": "Account Type column was not found in the file."})
+    
+    total_accounts=len(data['Email'])
+    field_with_unknown_values=[]
+    field_with_duplicate_data=[]
+    for i in range(total_accounts):
+        email=data['Email'][i]
+        username=data['Username'][i]
+        account_type=data['Account Type'][i]
+        if email and username and account_type:
+            try:
+                User.objects.get(username=username)
+                field_with_duplicate_data.append(i+1)
+                continue
+            except:
+                pass
+            try:
+                User.objects.get(email=email)
+                field_with_duplicate_data.append(i+1)
+                continue
+            except:
+                pass
+            if account_type!='student' and account_type!='company':
+                field_with_unknown_values.append(i+1)
+                continue
+            password=username + generate_random_password(10)
+            user=User.objects.create(username=username, email=email)
+            user.set_password(password)
+            user.save()
+            subject="New account in Clean Frame"
+            message="Your email has been used to create "+account_type+" account in Clean Frame. Login Credentials are as follows : \nUsername : "+username+"\nPassword : "+password+"\nPassword is auto generated so it is recommended to change ASAP."
+            if account_type=="company":
+                user.last_name=settings.COMPANY_MESSAGE
+                user.save()
+                Email_thread(subject,message,email).start()
+            if account_type == "student":
+                StudentProfile.objects.create(user=user, verified=True)
+            else:
+                CompanyProfile.objects.create(user=user, verified=True)
+        else:
+            field_with_unknown_values.append(i+1)
+
+    if len(field_with_unknown_values)==0 and len(field_with_duplicate_data)==0:
+        return render(request,'dashboard1/create_accounts.html',context={"permissions": permissions, "success": "All accounts have been created successfully."})
+    elif len(field_with_unknown_values)==0:
+        error="Rows with duplicate data are : "+str(field_with_duplicate_data)+" . You can cross-verify, accounts have been created from rest of the rows."
+    elif len(field_with_duplicate_data)==0:
+        error="Rows with empty email or empty username or undefined account type are : "+str(field_with_unknown_values)+" . You can cross-verify, accounts have been created from rest of the rows."
+    else:
+        error1="Rows with duplicate data are : "+str(field_with_duplicate_data)+" ."
+        error2="Rows with empty email or empty username or undefined account type are : "+str(field_with_unknown_values)+" .\nYou can cross-verify, accounts have been created from rest of the rows."
+        error=error1+"\n"+error2
+    return render(request,'dashboard1/create_accounts.html',context={"permissions": permissions, "error": error})
 
 def generate_random_password(n):
     digits = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ@#$!"

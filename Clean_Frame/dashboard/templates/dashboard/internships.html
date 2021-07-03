@@ -159,9 +159,8 @@
                 <div class="card-body">
                     <div class="table-responsive container">
                            <select class="form-control" id="session_filter" style="width: 50% !important, text-align: center;" onchange="draw()">
-                              {% for each in sessions %}
                               <option>All</option>
-                              <option>Alal</option>
+                              {% for each in sessions %}
                               <option>{{each.name}}</option>
                               {% endfor %}
                             </select>

@@ -47,10 +47,10 @@
           </a>
         </li>
         {% endif %} 
-        {% if permissions.can_create_new_company_account %}
+        {% if permissions.create_new_accounts %}
         <li>
-            <a href="{% url 'create_company_account' %}" class=""><span class="las la-user-plus"></span>
-            <span>New company account </span>
+            <a href="{% url 'create_accounts' %}" class=""><span class="las la-user-plus"></span>
+            <span>Create Accounts </span>
           </a>
         </li>
         {% endif %} 

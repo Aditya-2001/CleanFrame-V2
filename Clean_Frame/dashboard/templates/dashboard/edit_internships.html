@@ -158,15 +158,23 @@
             <!-- form C2 -->
             <tr>
                 <td>
-                    <form action="{% url 'edit_internship' item=data.id %}" method="POST" onsubmit="return validate_announcement_internship()" enctype="multipart/form-data">
+                    <form enctype="multipart/form-data" id="edit_internship">
                         {% csrf_token %}
                         <table class="comp_table1">
+                            <tr>
+                                <td>
+                                    <label for="session">Internship Session </label>
+                                </td>
+                                <td>
+                                    <input type="text" id="session" value="{{data.session.name}}" class="input-field" name="session" placeholder="Session" readonly>
+                                </td>
+                            </tr>
                             <tr>
                                 <td>
                                     <label for="internship_name">Internship Name </label>
                                 </td>
                                 <td>
-                                    <input type="text" id="internship_name" value="{{data.internship_name}}" class="input-field" name="internship_name" placeholder="Enter name of internship" required>
+                                    <input type="text" id="internship_name" value="{{data.internship_name}}" class="input-field" name="internship_name" placeholder="Enter name of internship">
                                 </td>
                             </tr>
                             <tr>
@@ -234,9 +242,12 @@
         </table>
         <br>
         <a href="{% url 'delete_internship' item=data.id %}" style="color: red; float: right">Delete Internship?</a>
+        <br>
     </div>{% endifequal %} {% endif %}
 </main>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js "></script>
-<script src="{% static 'js/profile.js' %} "></script>
+<script src="{% static 'js/profile.js' %}"></script>
+<script src="{% static 'ajax/edit_internship.js' %}"></script>
 <script src="{% static 'dashboard/js/profile_app.js' %} "></script>
+
 {% endblock %}

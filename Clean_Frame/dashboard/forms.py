@@ -47,3 +47,10 @@ class BlogForm(ModelForm):
             "brief_description",
             "image",
         ]
+
+class NewUserForm(ModelForm):
+    class Meta:
+        model = CompanyAnnouncement
+        fields = [
+            "file",
+        ]

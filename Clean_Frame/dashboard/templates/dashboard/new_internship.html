@@ -157,15 +157,25 @@
             <!-- form C2 -->
             <tr>
                 <td>
-                    <form action="{% url 'announce_internship' %}" method="POST" onsubmit="return validate_announcement_internship()" enctype="multipart/form-data">
+                    <form onsubmit="return validate_announcement_internship()" id="new_internship" enctype="multipart/form-data">
                         {% csrf_token %}
                         <table class="comp_table1">
+                            {% if session %}
+                                <tr>
+                                    <td>
+                                        <label for="session">Session</label>
+                                    </td>
+                                    <td>
+                                        <input type="text" id="session" class="input-field" value="{{session.name}}" name="session" placeholder="Current Session" readonly>
+                                    </td>
+                                </tr>
+                            {% endif %}
                             <tr>
                                 <td>
                                     <label for="internship_name">Internship Name </label>
                                 </td>
                                 <td>
-                                    <input type="text" id="internship_name" class="input-field" name="internship_name" placeholder="Enter name of internship" required>
+                                    <input type="text" id="internship_name" class="input-field" name="internship_name" placeholder="Enter name of internship">
                                 </td>
                             </tr>
                             <tr>
@@ -218,7 +228,7 @@
                             </tr>
 
                         </table>
-                        <input class="profile_save_changes_btn4" type="submit" value="Announce">
+                        <input class="profile_save_changes_btn4" id="new_internship_button" type="submit" value="Announce">
                     </form>
                 </td>
             </tr>
@@ -238,5 +248,6 @@
 </main>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 <script src="{% static 'js/profile.js' %}"></script>
+<script src="{% static 'ajax/new_internship.js' %}"></script>
 <script src="{% static 'dashboard/js/profile_app.js' %}"></script>
 {% endblock %}

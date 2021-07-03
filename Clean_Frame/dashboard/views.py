@@ -1,3 +1,4 @@
+from django.http.response import JsonResponse
 from django.shortcuts import render,HttpResponse,redirect
 from django.contrib.auth.models import User
 from django.contrib import messages
@@ -767,6 +768,7 @@ def announce_internship(request):
             return redirect('home')
         else:
             data=get_my_profile(request)
+            session=current_session()
             if request.method=="POST":
                 duration=request.POST.get('duration')
                 no_stu=request.POST.get('number_of_students')
@@ -776,14 +778,13 @@ def announce_internship(request):
                 pre=request.POST.get('pre')
                 internship_name=request.POST.get('internship_name')
                 try:
-                    intern=Internship.objects.get(company=request.user, internship_name=internship_name, stipend=stipend, internship_duration=duration, students_required=no_stu, internship_position=intern_pos, minimum_cgpa=min_cgpa, prerequisite=pre)
-                    return render(request, 'dashboard/new_internship.html', context={"data": data, "error": "Internship with same details already exists"})
+                    Internship.objects.get(session=session, company=request.user, internship_name=internship_name, stipend=stipend, internship_duration=duration, students_required=no_stu, internship_position=intern_pos, minimum_cgpa=min_cgpa, prerequisite=pre)
+                    return JsonResponse({"error": "Internship with same details already exists"}, status=400)
                 except:
-                    Internship.objects.create(company=request.user, internship_name=internship_name, stipend=stipend, internship_duration=duration, students_required=no_stu, internship_position=intern_pos, minimum_cgpa=min_cgpa, prerequisite=pre)
-                    return render(request, 'dashboard/new_internship.html', context={"data": data, "success": "Internship created with given details"})
+                    Internship.objects.create(session=session, company=request.user, internship_name=internship_name, stipend=stipend, internship_duration=duration, students_required=no_stu, internship_position=intern_pos, minimum_cgpa=min_cgpa, prerequisite=pre)
+                    return JsonResponse({"success": "internship created"}, status=200)
             # GO FOR GET METHOD
-            return render(request, 'dashboard/new_internship.html', context={"data": data})
-
+            return render(request, 'dashboard/new_internship.html', context={"data": data, "session": session})
     return error_detection(request,1)
 
 def announcements(request):
@@ -799,7 +800,8 @@ def internships(request):
         if request.user.last_name!=settings.COMPANY_MESSAGE:
             return redirect('home')
         internships=Internship.objects.filter(company=request.user)
-        return render(request, 'dashboard/internships.html', context={"internships": internships})
+        sessions=Session.objects.all().order_by('-active')
+        return render(request, 'dashboard/internships.html', context={"internships": internships,"sessions": sessions})
     return error_detection(request,1)
 
 def edit_internship(request, item):
@@ -1638,30 +1640,39 @@ def manage_blogs(request):
             return render(request,'dashboard1/manage_blogs.html',context={"permissions": permissions, "blogs": blogs})
     return error_detection(request,1)
 
-def activate_new_session(request):
+def manage_sessions(request):
     if error_detection(request,1)==False:
         if request.user.is_staff==False and request.user.is_superuser==False:
             return redirect('home')
         try:
             permissions=StaffPermissions.objects.get(user=request.user)
-            if permissions.can_activate_session==False:
+            if permissions.can_manage_sessions==False:
                 return error(request,"You don't have permission to access this page")
         except:
             StaffPermissions.objects.create(user=request.user)
             return redirect('dashboard')
         if request.method=="POST":
-            users=User.objects.filter(is_staff=False)
-            users=users.exclude(last_name=settings.COMPANY_MESSAGE)
-            for each in users:
-                try:
-                    p=StudentProfile.objects.get(user=each)
-                    p.got_internship=False
-                    p.save()
-                except:
-                    pass
-            return render(request,'dashboard1/activate_session.html',context={"permissions": permissions, "success": "Session Refreshed with success"})
-        return render(request,'dashboard1/activate_session.html',context={"permissions": permissions})
+            name=request.POST.get("session_name")
+            try:
+                Session.objects.get(name=name)
+                return JsonResponse({"error": "Session has been already created with this name."}, status=400)
+            except:
+                pass
+            sessions=Session.objects.filter(active=True)
+            for each in sessions:
+                each.active=False
+                each.save()
+            Session.objects.create(name=name)
+            return JsonResponse({"success": "Session created"}, status=200)
+        sessions=Session.objects.all().order_by('active')
+        return render(request,'dashboard1/manage_sessions.html',context={"permissions": permissions, "sessions": sessions})
     return error_detection(request,1)
+
+def current_session():
+    sessions=Session.objects.filter(active=True)
+    if sessions.count()==0:
+        return False
+    return sessions[0]
 
 def create_new_blog(request):
     if error_detection(request,1)==False:
@@ -1783,7 +1794,7 @@ def edit_staff_permissions(request, item):
             data.can_manage_blogs=True if request.POST.get('can_manage_blogs')=="1" else False
             data.can_manage_technical_support=True if request.POST.get('can_manage_technical_support')=="1" else False
             data.can_give_notifications=True if request.POST.get('can_give_notifications')=="1" else False
-            data.can_activate_session=True if request.POST.get('can_activate_session')=="1" else False
+            data.can_manage_sessions=True if request.POST.get('can_activate_session')=="1" else False
             data.save()
             return redirect('edit_staff_permissions',item)
         else:
@@ -1831,7 +1842,7 @@ def create_new_staff_account(request):
             data.can_manage_blogs=True if request.POST.get('can_manage_blogs')=="1" else False
             data.can_manage_technical_support=True if request.POST.get('can_manage_technical_support')=="1" else False
             data.can_give_notifications=True if request.POST.get('can_give_notifications')=="1" else False
-            data.can_activate_session=True if request.POST.get('can_activate_session')=="1" else False
+            data.can_manage_sessions=True if request.POST.get('can_activate_session')=="1" else False
             data.save()
             return redirect('manage_staff_accounts')
         else:

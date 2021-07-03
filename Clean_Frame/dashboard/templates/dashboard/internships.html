@@ -158,32 +158,38 @@
                 </div>
                 <div class="card-body">
                     <div class="table-responsive container">
-                        <!-- <div id="myTable_filter" class="search-wrapper1 dataTables_filter">
-                  <span class="las la-search"></span>
-                  <input type="search" aria-controls="myTable" placeholder="Search User">
-                </div> -->
-                        <table id="myTable">
+                           <select class="form-control" id="session_filter" style="width: 50% !important, text-align: center;" onchange="draw()">
+                              {% for each in sessions %}
+                              <option>All</option>
+                              <option>Alal</option>
+                              <option>{{each.name}}</option>
+                              {% endfor %}
+                            </select>
+
+                            <br>
+
+                        <table id="myTable" class="display nowrap" style="width: 100%">
+                        
                             <thead id="thead">
                                 <tr id="tr1" style="text-align: center;">
                                     <td>#ID (Edit)</td>
+                                    <td id="td">Session</td>
                                     <td id="td1">Name</td>
                                     <td id="td2">Stipend</td>
                                     <td id="td3">Duration</td>
-                                    <td id="td4">Students Needed</td>
-                                    <td id="td5">Position</td>
-                                    <td id="td5">Minimum CGPA</td>
-                                    <td>Result</td>
+                                    <td id="td6">Minimum CGPA</td>
+                                    <td id="td7">Result</td>
                                 </tr>
                             </thead>
+                            
                             <tbody>
                                 {% for each in internships %}
                                 <tr id="tr1" style="text-align: center;">
                                     <td><a href="{% url 'edit_internship' item=each.id %}">#{{each.id}}</a></td>
+                                    <td>{{each.session.name}}</td>
                                     <td>{{each.internship_name}}</td>
                                     <td>{{each.stipend}}</td>
                                     <td>{{each.internship_duration}}</td>
-                                    <td>{{each.students_required}}</td>
-                                    <td>{{each.internship_position}}</td>
                                     <td>{{each.minimum_cgpa}}</td>
                                     <td style="padding-top: 15px; padding-left: 20px;">
                                       {% if each.result_announced %}
@@ -202,4 +208,8 @@
             </div>
         </div>
 </main>
+
+  <script src="{% static 'ajax/internships.js' %}"></script>
+{% endblock %}
+{% block js_content %}
 {% endblock %}

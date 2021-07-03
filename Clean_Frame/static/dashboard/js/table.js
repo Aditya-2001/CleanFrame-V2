@@ -21,12 +21,17 @@ function doc_height() {
   $('.sidebar').css('height',Math.max(screen.height,alpha))
 };
 
-  $("#myTable").DataTable({
+  var table=$("#myTable").DataTable({
     "paging": true,
     "ordering": true,
     "bLengthChange": true,
-    "searching": true
+    "searching": true,
   });
+
+  
+  function draw(){  
+    table.draw();
+  }
 
   function myFunction() {
     // Declare variables

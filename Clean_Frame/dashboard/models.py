@@ -19,7 +19,7 @@ class StaffPermissions(models.Model):
     can_manage_staff_accounts=models.BooleanField(default=False)
     can_delete_staff_accounts=models.BooleanField(default=False)
     
-    can_activate_session=models.BooleanField(default=False)
+    can_manage_sessions=models.BooleanField(default=False)
     
     def __str__(self):
         if self.user:
@@ -27,7 +27,16 @@ class StaffPermissions(models.Model):
         else:
             return 'NILL'
 
+class Session(models.Model):
+    name=models.CharField(max_length=10000, null=True)
+    active=models.BooleanField(default=True)
+    created_on=models.DateTimeField(default=datetime.datetime.now())
+
+    def __str__(self):
+        return self.name
+
 class Internship(models.Model):
+    session=models.ForeignKey(Session, on_delete=models.CASCADE, null=True, blank=True)
     company=models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
     internship_name=models.CharField(max_length=10000, null=True)
     stipend=models.FloatField(default=0, null=True)

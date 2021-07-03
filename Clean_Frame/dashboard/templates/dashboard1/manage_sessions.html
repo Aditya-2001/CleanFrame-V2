@@ -138,7 +138,7 @@
 {% endblock %}
 
 <!--For the text at the top of panel 2-->
-{% block dashboard_title %} Activate Session {% endblock %}
+{% block dashboard_title %} Sessions {% endblock %}
 
 <!--For the user details displayed at the top right-->
 
@@ -148,18 +148,15 @@
     {% if request.user.is_authenticated %}
     <!--COPY OF PHONE VERIFICATION FORM-->
     <div class="cards_form_comp1" id="cr11">
-        <h5 style="text-align: center; padding-bottom: 30px">Click the button to activate the session.</h5>
+        <h5 style="text-align: center; padding-bottom: 30px">Create a new session</h5>
         <h6 id="time_error2" style="text-align: center; padding-bottom: 5px; color: green">{{success}}</h6>
         <table class="comp_table1">
-            <!--GO FOR COMPANY PHASE 2-->
-            <!-- only for company, it includes editing basic profile details -->
-            <!-- form C2 -->
             <tr>
                 <td>
-                    <form action="{% url 'activate_new_session' %}" method="POST" enctype="multipart/form-data">
+                    <form enctype="multipart/form-data" id="new_session">
                         {% csrf_token %}
-                        
-                        <input class="profile_save_changes_btn4" onclick="confirm('After confirming all the students who got internship will be able to register again that is the new session will be created.')" type="submit" value="Activate Session">
+                        <input type="text" id="session_name" class="input-field profile_save_changes_btn4" name="session_name" placeholder="July XXXX - Dec XXXX"><br>
+                        <input class="profile_save_changes_btn4" type="submit" id="button" value="Create Session">
                     </form>
                 </td>
             </tr>
@@ -167,9 +164,24 @@
             </tfoot>
         </table>
     </div>
+
+    <div class="cards">
+      {% for each in sessions %}
+        <div class="card-single">
+            <div>
+                <h1 style="font-size: 1.2rem">{{each.name}}</h1>
+                <span>{% if each.active %}Current Session{% endif %}</span>
+            </div>
+            <div>
+                <span></span>
+            </div>
+        </div>
+      {% endfor %}
+    </div>
      {% endif %}
 </main>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js "></script>
 <script src="{% static 'js/profile.js' %} "></script>
+<script src="{% static 'ajax/manage_sessions.js' %} "></script>
 <script src="{% static 'dashboard/js/profile_app.js' %} "></script>
 {% endblock %}

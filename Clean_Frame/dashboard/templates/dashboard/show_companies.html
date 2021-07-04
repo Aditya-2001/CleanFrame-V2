@@ -156,9 +156,13 @@
     {% endif %}
     <h6 style="text-align: center; color: red;" id="message">{{error}}</h6>
 
+    <div class="alert alert-dismissible fade show" role="alert" style="background-color: #CEDA6A">
+      <strong>First Round Registrations. For other rounds visit My Registrations Section</strong>
+      <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+        <span aria-hidden="true">&times;</span>
+      </button>
+    </div>
 
-    <h3><b>First Round Registrations. For other rounds visit My Registrations Section</b></h3>
-    
 
       {% if companies %}
         <select class="form-control" id="session_filter" style="width: 50% !important, text-align: center;" onchange="draw()">

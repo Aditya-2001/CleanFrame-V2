@@ -1067,7 +1067,8 @@ def show_registrations(request):
         data=get_my_profile(request)
         registrations=StudentRegistration.objects.filter(student=request.user)
         #Also get registrations of other rounds
-        return render(request, "dashboard/registrations.html", context={"registrations": registrations})
+        session=current_session()
+        return render(request, "dashboard/registrations.html", context={"registrations": registrations, "session": session})
     return error_detection(request,1)
 
 def internship_action(request,item,type):

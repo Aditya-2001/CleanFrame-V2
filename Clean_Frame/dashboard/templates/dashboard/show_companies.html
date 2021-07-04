@@ -155,55 +155,47 @@
     <h6 style="text-align: center; color: green;" id="message">Registered Successfully</h6>
     {% endif %}
     <h6 style="text-align: center; color: red;" id="message">{{error}}</h6>
-    <div class="recent-grid1">
-        <div class="projects">
-            <div class="card">
-                <div class="card-header">
-                    <h5>First Round Registrations. For other rounds visit My Registrations Section</h5>
-                    <button type="button" onclick="toexcel('#myTable')" style="width: 170px; text-align: center;">Export to excel</button>
-                    <!-- <div id="myTable_filter" class="search-wrapper1">
-                <span class="las la-search"></span>
-                <input type="search" aria-controls="myTable" placeholder="Search User">
-              </div> -->
-                    <!-- <button type="button" name="See all">See all <span class="las la-arrow-right"></span></button> -->
-                </div>
-                <div class="card-body">
-                    <div class="table-responsive container">
-                        <!-- <div id="myTable_filter" class="search-wrapper1 dataTables_filter">
-                  <span class="las la-search"></span>
-                  <input type="search" aria-controls="myTable" placeholder="Search User">
-                </div> -->
-                        <table id="myTable">
-                            <thead id="thead">
-                                <tr id="tr1" style="text-align: center;">
-                                    <td>#ID</td>
-                                    <td>Internship Name</td>
-                                    <td id="td1">Company Name</td>
-                                    <td id="td2">Round Name</td>
-                                    <td id="td3">Last Date</td>
-                                    <td id="td4">Register</td>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for each in companies %}
-                                <tr id="tr1" style="text-align: center;">
-                                    <td><a href="{% url 'show_company_round_details' item=each.id %}">{{each.id}}</a></td>
-                                    <td>{{each.internship.internship_name}}</td>
-                                    <td><a href="{% url 'check_company_profile' item=each.company.id %}">{{each.company.first_name}}</a></td>
-                                    <td>{{each.round_name}}</td>
-                                    <td>{{each.last_date_to_apply}}</td>
-                                    <td style="margin-left: 16%;">
-                                        <a href="{% url 'register_student_first_round_only' item=each.id %}" style="text-decoration: none;">
-                                            <span class="fas fa-check" style="color: green; font-size: 1.2rem; "></span>
-                                        </a>
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+
+
+    <h3><b>First Round Registrations. For other rounds visit My Registrations Section</b></h3>
+    
+
+      {% if companies %}
+        <select class="form-control" id="session_filter" style="width: 50% !important, text-align: center;" onchange="draw()">
+          <option id="all">These offers are filtered for you according to your CGPA and current session.</option>
+        </select>
+      
+      {% else %}
+        <p style="color: red; font-size: 2rem; margin-top: 30px">No company filtered for you yet.</p>
+      {% endif %}
+
+      {% for each in companies %}  
+          <div class="card" style="margin-top: 50px">
+            <div class="card-header">
+
+              <h6 style="float: left"><a href="{% url 'check_company_profile' item=each.company.id %}" style="text-decoration: none"><b>{{each.company.first_name}}</b></a></h6>
+              <h6 style="float: right">{{each.last_date_to_apply}}</h6>
+
             </div>
-        </div>
+            <div class="card-body">
+              <h6 style="float: right">{% if each.file %}<a href="{{each.file.url}}">Information</a>{% endif %}</h6>
+              <h5 class="card-title">{{each.round_name}}, {{each.internship.internship_name}}</h5>
+              
+              {% if data.got_internship %}
+                <p class="card-text">Internship duration offered is {{each.internship.internship_duration}} days, with a stipend of Rs. {{each.internship.internship_duration}}. Position Offered is {{each.internship.internship_position}}. You can register more for this session since you have got one internship, let others gain oppurtunity.</p>
+                <p class="card-text">{{each.message}}</p>
+                <h6 style="float: right">{% if each.file_for_prev_result %}<a href="{{each.file_for_prev_result.url}}">Information</a>{% endif %}</h6>
+                <a href="#" class="btn btn-primary">Can't Register</a>
+              {% else %}
+                <p class="card-text">Internship duration offered is {{each.internship.internship_duration}} days, with a stipend of Rs. {{each.internship.internship_duration}}. Position Offered is {{each.internship.internship_position}}. Since your cgpa is more than minmum cpga {{each.internship.minimum_cpga}}, so you are eligible to apply.</p>
+                <p class="card-text">{{each.message}}</p>
+                <h6 style="float: right">{% if each.file_for_prev_result %}<a href="{{each.file_for_prev_result.url}}">Information</a>{% endif %}</h6>
+                <a href="{% url 'register_student_first_round_only' item=each.id %}" class="btn btn-primary">Register Now</a>
+              {% endif %}
+            </div>
+          </div>
+      {% endfor %}
 </main>
+
+<script type="text/javascript" src="{% static 'ajax/show_companies.js' %}"></script>
 {% endblock %}

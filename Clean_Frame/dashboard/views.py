@@ -389,7 +389,6 @@ def student_profile_3(request):
             u.save()
             address=request.POST.get('address')
             gender=request.POST.get('gender')
-            cgpa=request.POST.get('cgpa')
             try:
                 p=StudentProfile.objects.get(user=request.user)
                 p.complete_address=address
@@ -399,7 +398,6 @@ def student_profile_3(request):
                     p.gender='Female'
                 else:
                     p.gender='Transgender'
-                p.cgpa=float(cgpa)
                 p.save()
                 return redirect('profile')
             except:
@@ -475,7 +473,7 @@ def company_profile_3(request):
 
 def student_profile_2(request):
     if request.user.is_authenticated :
-        if request.user.last_name!=settings.COMPANY_MESSAGE or user_profile.is_staff or user_profile.is_superuser:
+        if request.user.last_name!=settings.COMPANY_MESSAGE:
             form = StudentPhotoForm(request.POST,request.FILES)
             if form.is_valid():
                 try:
@@ -971,8 +969,6 @@ def show_companies(request):
         if request.user.is_staff or request.user.is_superuser or request.user.last_name==settings.COMPANY_MESSAGE:
             return redirect('home')
         data=get_my_profile(request)
-        if data.got_internship==True:
-            return error(request,"You can't register for internships this season because you alrady have one")
         eligible_companies=get_eligible_companies_for_me_round_one(request)
         return render(request, 'dashboard/show_companies.html', context={"data": data, "companies": eligible_companies})
     return error_detection(request,1)
@@ -1003,9 +999,9 @@ def register_student_first_round_only(request, item):
         if request.user.is_staff or request.user.is_superuser or request.user.last_name==settings.COMPANY_MESSAGE:
             return redirect('home')
         data=get_my_profile(request)
-        if data.got_internship==True:
-            return error(request,"You can't register for internships this season because you alrady have one")
         eligible_companies=get_eligible_companies_for_me_round_one(request)
+        if data.got_internship==True:
+            return render(request, 'dashboard/show_companies.html', context={"data": data, "companies": eligible_companies, "error": "You can't register for internships this session because you already have one"})
         try:
             ann=CompanyAnnouncement.objects.get(id=int(item))
             s_data=StudentProfile.objects.get(user=request.user)
@@ -1016,6 +1012,8 @@ def register_student_first_round_only(request, item):
             return render(request, 'dashboard/show_companies.html', context={"data": data, "companies": eligible_companies, "error": "Announcement Round is not 1, contact staff to see into this matter."})
         if s_data.cgpa<ann.internship.minimum_cgpa:
             return render(request, 'dashboard/show_companies.html', context={"data": data, "companies": eligible_companies, "error": "Your aren't eligible to register for this company since your CGPA does not met minimum CGPA set by the company"})
+        if ann.internship.session.active==False:
+            return render(request, 'dashboard/show_companies.html', context={"data": data, "companies": eligible_companies, "error": "No more registraions are allowed for the session in which you are trying to register."})
         try:
             StudentRegistration.objects.get(student=request.user, company=ann)
             return render(request, 'dashboard/show_companies.html', context={"data": data, "companies": eligible_companies, "error": "You are Already registered"})
@@ -1031,7 +1029,7 @@ def register_student_first_round_only(request, item):
     return error_detection(request,1)
 
 def get_eligible_companies_for_me_round_one(request):
-    eligible_companies=CompanyAnnouncement.objects.filter(general_announcement=False, first_round=True, last_date_to_apply__gte=datetime.datetime.now())
+    eligible_companies=CompanyAnnouncement.objects.filter(general_announcement=False, first_round=True, last_date_to_apply__gte=datetime.datetime.now(), internship__session__active=True)
     copy=eligible_companies
     data=get_my_profile(request)
     for each in copy:

@@ -154,11 +154,12 @@
     <!--COPY OF PHONE VERIFICATION FORM-->
     <div class="cards_form_comp1" id="cr11">
         <h5 style="padding-bottom: 12px">Please follow the instructions to create new users in a genunine manner.</h5>
-        <h6 style="padding-bottom: 10px">1. Only CSV and EXCEL files are allowed. <a href="#">Sample Excel File</a></h6>
+        <h6 style="padding-bottom: 10px">1. Only CSV and EXCEL files are allowed. <a href="{% static 'sample/sample_new_accounts.xlsx' %}">Sample Excel File</a></h6>
         <h6 style="padding-bottom: 10px">2. There could be multiple columns, there order does not matter, for example - email can be given in the column after or before username but inside email column, only email should be there.</h6>
         <h6 style="padding-bottom: 10px">3. If any duplicate entry is found, then first copy will be taken to create account.</h6>
         <h6 style="padding-bottom: 10px">4. Compulsory Columns are : Email, Username, Account Type. Account type can be "student" or "company". Column Names should be in title case.</h6>
-        <h6 style="padding-bottom: 10px">5. An auto-generated password would be sent to th email address, which will also contain account type and other login credentials.</h6>
+        <h6 style="padding-bottom: 10px">5. For Student Accounts, CGPA can be given as a temporary field. In this column cgpa of company can be left empty or set as NaN.</h6>
+        <h6 style="padding-bottom: 10px">6. An auto-generated password would be sent to th email address, which will also contain account type and other login credentials.</h6>
         <p style="color: red !important">{{error}}</p>
         <p style="color: green !important">{{success}}</p>
         <table class="comp_table1">

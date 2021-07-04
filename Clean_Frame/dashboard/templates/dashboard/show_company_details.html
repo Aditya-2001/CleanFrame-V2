@@ -48,10 +48,10 @@
           </a>
         </li>
         {% endif %} 
-        {% if permissions.can_create_new_company_account %}
+        {% if permissions.create_new_accounts %}
         <li>
-            <a href="{% url 'create_company_account' %}" class=""><span class="las la-user-plus"></span>
-            <span>New company account </span>
+            <a href="{% url 'create_accounts' %}" class=""><span class="las la-user-plus"></span>
+            <span>Create Accounts </span>
           </a>
         </li>
         {% endif %} 
@@ -83,11 +83,17 @@
           </a>
         </li>
         {% endif %} 
-
         {% if permissions.can_activate_session %}
         <li>
             <a href="{% url 'activate_new_session' %}" class=""><span class="las la-info-circle"></span>
             <span>Activate New Session </span>
+          </a>
+        </li>
+        {% endif %} 
+        {% if permissions.can_manage_sessions %}
+        <li>
+            <a href="{% url 'manage_sessions' %}" class=""><span class="las la-info-circle"></span>
+            <span>Manage Sessions </span>
           </a>
         </li>
         {% endif %} 

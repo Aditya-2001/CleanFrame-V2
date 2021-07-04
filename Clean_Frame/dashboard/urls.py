@@ -50,7 +50,6 @@ urlpatterns = [
     path('staff/unrestrict/user/<str:item>',unban_user,name="unban_user"),
 
     path('staff/create/accounts/',create_accounts,name="create_accounts"),
-    path('staff/create/companyaccount/',create_company_account,name="create_company_account"),
     path('staff/manage/blogs/',manage_blogs,name="manage_blogs"),
     path('staff/manage/blogs/new/',create_new_blog,name="create_new_blog"),
     path('staff/manage/blog/delete/<str:item>',delete_blog,name="delete_blog"),

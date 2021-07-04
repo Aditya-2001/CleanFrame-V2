@@ -1580,44 +1580,6 @@ def get_banned_users(request):
                 users=users.exclude(id=each.id)
     return users
 
-def create_company_account(request):
-    if error_detection(request,1)==False:
-        if request.user.is_staff==False and request.user.is_superuser==False:
-            return redirect('home')
-        try:
-            permissions=StaffPermissions.objects.get(user=request.user)
-            if permissions.can_create_new_company_account==False:
-                return error(request,"You don't have permission to access this page")
-        except:
-            StaffPermissions.objects.create(user=request.user)
-            return redirect('dashboard')
-        if request.method=="POST":
-            username=request.POST.get('username')
-            first_name=request.POST.get('first_name')
-            email=request.POST.get('email')
-            try:
-                user=User.objects.get(email=email)
-                return render(request,'dashboard1/new_company_account.html',context={"permissions": permissions, "error": "Account exists with given email", "username": username, "email": email, "first_name": first_name})
-            except:
-                try:
-                    user=User.objects.get(username=username)
-                    return render(request,'dashboard1/new_company_account.html',context={"permissions": permissions, "error": "Account exists with given username", "username": username, "email": email, "first_name": first_name})
-                except:
-                    pass
-            user=User.objects.create(username=username, email=email, first_name=first_name, last_name=settings.COMPANY_MESSAGE)
-            password=generate_random_password(20)
-            user.set_password(password)
-            user.save()
-            profile=CompanyProfile.objects.create(user=user, verified=True)
-            subject = 'Company Account created'
-            message = f'An account has been created for this email in Clean Frame.<br/>Account Details are as follows:<br/>Username: '+str(user)+'<br/>Password: '+str(password)+'<br/>Company Name: '+str(user.first_name)+'<br/>Now you can offer internships by fulfilling minimum profile details.<br/>The password is a auto generated password so we suggest you to change it.'
-            email=email
-            Email_thread(subject,message,email).start()
-            return render(request,'dashboard1/new_company_account.html',context={"permissions": permissions, "success": "Company Account created succesfully"})
-        else:
-            return render(request,'dashboard1/new_company_account.html',context={"permissions": permissions})
-    return error_detection(request,1)
-
 def create_accounts(request):
     if error_detection(request,1)==False:
         if request.user.is_staff==False and request.user.is_superuser==False:
@@ -1654,7 +1616,10 @@ def create_accounts_helper(request,data,permissions):
         return render(request,'dashboard1/create_accounts.html',context={"permissions": permissions, "error": "Username column was not found in the file."})
     if 'Account Type' not in data.columns:
         return render(request,'dashboard1/create_accounts.html',context={"permissions": permissions, "error": "Account Type column was not found in the file."})
-    
+    cgpa_given=False
+    if 'CGPA' in data.columns:
+        cgpa_given=True
+
     total_accounts=len(data['Email'])
     field_with_unknown_values=[]
     field_with_duplicate_data=[]
@@ -1662,6 +1627,15 @@ def create_accounts_helper(request,data,permissions):
         email=data['Email'][i]
         username=data['Username'][i]
         account_type=data['Account Type'][i]
+        cgpa=0.0
+        if cgpa_given==True:
+            try:
+                cgpa=float(data['CGPA'][i])
+                if cgpa>10.0 or cgpa<0.0:
+                    cgpa=0.0
+            except:
+                cgpa=0.0
+            
         if email and username and account_type:
             try:
                 User.objects.get(username=username)
@@ -1684,12 +1658,12 @@ def create_accounts_helper(request,data,permissions):
             user.save()
             subject="New account in Clean Frame"
             message="Your email has been used to create "+account_type+" account in Clean Frame. Login Credentials are as follows : \nUsername : "+username+"\nPassword : "+password+"\nPassword is auto generated so it is recommended to change ASAP."
+            Email_thread(subject,message,email).start()
             if account_type=="company":
                 user.last_name=settings.COMPANY_MESSAGE
                 user.save()
-                Email_thread(subject,message,email).start()
             if account_type == "student":
-                StudentProfile.objects.create(user=user, verified=True)
+                StudentProfile.objects.create(user=user, verified=True, cgpa=float(cgpa))
             else:
                 CompanyProfile.objects.create(user=user, verified=True)
         else:

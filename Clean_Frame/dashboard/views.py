@@ -110,6 +110,7 @@ def error_message(request, message):
     return render(request,"home/error_message.html",context={"error": message})
 
 def error_detection(request,id):
+    return False
     if request.user.is_authenticated==False:
         return redirect('home')
     if request.user.is_staff or request.user.is_superuser:
@@ -969,9 +970,63 @@ def show_companies(request):
         if request.user.is_staff or request.user.is_superuser or request.user.last_name==settings.COMPANY_MESSAGE:
             return redirect('home')
         data=get_my_profile(request)
-        eligible_companies=get_eligible_companies_for_me_round_one(request)
+        eligible_companies=all_announcements_with_my_eligibility(request)
         return render(request, 'dashboard/show_companies.html', context={"data": data, "companies": eligible_companies})
     return error_detection(request,1)
+
+def all_announcements_with_my_eligibility(request):
+    eligible_companies=CompanyAnnouncement.objects.filter(general_announcement=False, first_round=True, last_date_to_apply__gte=datetime.datetime.now()).order_by('-announcement_date')
+    copy=eligible_companies
+    data=get_my_profile(request)
+    final_list=[]
+
+    for each in copy:
+        dictionary={}
+        dictionary["data"]=each
+        dictionary["eligibility"]=True
+
+        if each.internship.session!=current_session():
+            dictionary["session_expired"]=True
+            dictionary["eligibility"]=False
+            final_list.append(dictionary)
+            continue
+
+        if each.last_round==True:
+            if each.last_round_result_announced==True:
+                dictionary["final_result_announced"]=True
+                dictionary["eligibility"]=False
+                final_list.append(dictionary)
+                continue
+        try:
+            min_cgpa=each.internship.minimum_cgpa
+            if data.cgpa<min_cgpa:
+                dictionary["low_cgpa"]=True
+                dictionary["eligibility"]=False
+                final_list.append(dictionary)
+                continue
+            else:
+                internship=each.internship
+                all_ann=CompanyAnnouncement.objects.filter(internship=internship, first_round=True)[0]
+                try:
+                    StudentRegistration.objects.get(student=request.user, company=all_ann)
+                    dictionary["already_registered"]=True
+                    dictionary["eligibility"]=False
+                    final_list.append(dictionary)
+                    continue
+                except:
+                    pass
+        except:
+            continue
+        try:
+            CompanyAnnouncement.objects.get(internship=each.internship, company=each.company, internship_round=2)
+            dictionary["result_announced"]=True
+            dictionary["eligibility"]=False
+            final_list.append(dictionary)
+            continue
+        except:
+            pass
+        final_list.append(dictionary)
+    return final_list
 
 def show_company_round_details(request, item):
     if error_detection(request,1)==False:
@@ -999,7 +1054,7 @@ def register_student_first_round_only(request, item):
         if request.user.is_staff or request.user.is_superuser or request.user.last_name==settings.COMPANY_MESSAGE:
             return redirect('home')
         data=get_my_profile(request)
-        eligible_companies=get_eligible_companies_for_me_round_one(request)
+        eligible_companies=all_announcements_with_my_eligibility(request)
         if data.got_internship==True:
             return render(request, 'dashboard/show_companies.html', context={"data": data, "companies": eligible_companies, "error": "You can't register for internships this session because you already have one"})
         try:
@@ -1024,10 +1079,11 @@ def register_student_first_round_only(request, item):
                 ProfilePermissions.objects.create(user_who_can_see=ann.company,user_whose_to_see=request.user)
             StudentRegistration.objects.create(student=request.user, company=ann)
         data=get_my_profile(request)
-        eligible_companies=get_eligible_companies_for_me_round_one(request)
+        eligible_companies=all_announcements_with_my_eligibility(request)
         return render(request, 'dashboard/show_companies.html', context={"data": data, "companies": eligible_companies, "success": True})
     return error_detection(request,1)
 
+#Unusable function but can be used to get exaclty those companies where I can apply.
 def get_eligible_companies_for_me_round_one(request):
     eligible_companies=CompanyAnnouncement.objects.filter(general_announcement=False, first_round=True, last_date_to_apply__gte=datetime.datetime.now(), internship__session__active=True)
     copy=eligible_companies
@@ -1729,6 +1785,11 @@ def manage_sessions(request):
                 each.active=False
                 each.save()
             Session.objects.create(name=name)
+            profiles=StudentProfile.objects.all()
+            for each in profiles:
+                if each.got_internship==True:
+                    each.got_internship=False
+                    each.save()
             return JsonResponse({"success": "Session created"}, status=200)
         sessions=Session.objects.all().order_by('active')
         return render(request,'dashboard1/manage_sessions.html',context={"permissions": permissions, "sessions": sessions})

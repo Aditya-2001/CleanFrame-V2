@@ -166,7 +166,7 @@
 
       {% if companies %}
         <select class="form-control" id="session_filter" style="width: 50% !important, text-align: center;" onchange="draw()">
-          <option id="all">These offers are filtered for you according to your CGPA and current session.</option>
+          <option id="all">You can check for what companies you are eligible for and how should you improve to become eligible for other companies.</option>
         </select>
       
       {% else %}
@@ -177,24 +177,50 @@
           <div class="card" style="margin-top: 50px">
             <div class="card-header">
 
-              <h6 style="float: left"><a href="{% url 'check_company_profile' item=each.company.id %}" style="text-decoration: none"><b>{{each.company.first_name}}</b></a></h6>
-              <h6 style="float: right">{{each.last_date_to_apply}}</h6>
+              <h6 style="float: left"><a href="{% url 'check_company_profile' item=each.data.company.id %}" style="text-decoration: none"><b>{{each.data.company.first_name}}</b></a></h6>
+              <h6 style="float: right">{{each.data.last_date_to_apply}}</h6>
 
             </div>
             <div class="card-body">
-              <h6 style="float: right">{% if each.file %}<a href="{{each.file.url}}">Information</a>{% endif %}</h6>
-              <h5 class="card-title">{{each.round_name}}, {{each.internship.internship_name}}</h5>
+              <h6 style="float: right">{% if each.data.file %}<a href="{{each.data.file.url}}">Information</a>{% endif %}</h6>
+              <h5 class="card-title">{{each.data.round_name}}, {{each.data.internship.internship_name}}</h5>
               
               {% if data.got_internship %}
-                <p class="card-text">Internship duration offered is {{each.internship.internship_duration}} days, with a stipend of Rs. {{each.internship.internship_duration}}. Position Offered is {{each.internship.internship_position}}. You can register more for this session since you have got one internship, let others gain oppurtunity.</p>
-                <p class="card-text">{{each.message}}</p>
-                <h6 style="float: right">{% if each.file_for_prev_result %}<a href="{{each.file_for_prev_result.url}}">Information</a>{% endif %}</h6>
+                <p class="card-text">Internship duration offered is {{each.data.internship.internship_duration}} days, with a stipend of Rs. {{each.data.internship.stipend}}. Position Offered is {{each.data.internship.internship_position}}. You can register more for this session since you have got one internship, let others gain oppurtunity.</p>
+                <p class="card-text">{{each.data.message}}</p>
+                <h6 style="float: right">{% if each.data.file_for_prev_result %}<a href="{{each.data.file_for_prev_result.url}}">Information</a>{% endif %}</h6>
                 <a href="#" class="btn btn-primary">Can't Register</a>
               {% else %}
-                <p class="card-text">Internship duration offered is {{each.internship.internship_duration}} days, with a stipend of Rs. {{each.internship.internship_duration}}. Position Offered is {{each.internship.internship_position}}. Since your cgpa is more than minmum cpga {{each.internship.minimum_cpga}}, so you are eligible to apply.</p>
-                <p class="card-text">{{each.message}}</p>
-                <h6 style="float: right">{% if each.file_for_prev_result %}<a href="{{each.file_for_prev_result.url}}">Information</a>{% endif %}</h6>
-                <a href="{% url 'register_student_first_round_only' item=each.id %}" class="btn btn-primary">Register Now</a>
+                {% if each.eligibility %}
+                  <p class="card-text">Internship duration offered is {{each.data.internship.internship_duration}} days, with a stipend of Rs. {{each.data.internship.stipend}}. Position Offered is {{each.data.internship.internship_position}}. Since your cgpa is more than minmum cpga {{each.data.internship.minimum_cpga}}, so you are eligible to apply.</p>
+                  <p class="card-text">{{each.data.message}}</p>
+                  <h6 style="float: right">{% if each.data.file_for_prev_result %}<a href="{{each.data.file_for_prev_result.url}}">Information</a>{% endif %}</h6>
+                  <a href="{% url 'register_student_first_round_only' item=each.data.id %}" class="btn btn-primary">Register Now</a>
+                {% else %}
+                  <p class="card-text">Internship duration offered is {{each.data.internship.internship_duration}} days, with a stipend of Rs. {{each.data.internship.stipend}}. Position Offered is {{each.data.internship.internship_position}}. You can't apply.</p>
+                  <p class="card-text">{{each.data.message}}</p>
+                  {% if each.session_expired %}
+                    <a class="btn btn-danger">Session Expired</a>
+                  {% else %}  
+                    {% if each.final_result_announced %}
+                      <a class="btn btn-danger">Final Round Results Announced</a>
+                    {% else %}  
+                      {% if each.result_announced %}
+                        <a class="btn btn-danger">You are late</a>
+                      {% else %}  
+                        {% if each.low_cgpa %}
+                          <a class="btn btn-danger">Low CGPA</a>
+                        {% else %}  
+                          {% if each.already_registered %}
+                            <a class="btn btn-success">Registered!!</a>
+                          {% else %}  
+                            
+                          {% endif %}  
+                        {% endif %}
+                      {% endif %}
+                    {% endif %}
+                  {% endif %}
+                {% endif %}
               {% endif %}
             </div>
           </div>

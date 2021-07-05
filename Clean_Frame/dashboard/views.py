@@ -84,14 +84,14 @@ def dashboard(request):
             registrations=0
             for each in internships:
                 registrations+=StudentRegistration.objects.filter(company__internship=each).count()
-            selected_students=InternshipFinalResult.objects.filter(company=request.user,student_agrees=2).count()
+            selected_students=InternshipFinalResult.objects.filter(company=request.user).count()
             unselected_students=registrations-selected_students
             return render(request,'dashboard1/dashboard_company.html',context={"data": data, "internships_with_result": internships_with_result, "internships_without_result": internships_without_result, "selected_students": selected_students, "unselected_students": unselected_students, "internships": internships.count(), "registrations": registrations})
         else:
             my_registrations=StudentRegistration.objects.filter(student=request.user).count()
             my_selections=InternshipFinalResult.objects.filter(student=request.user).count()
-            internships_accepted=InternshipFinalResult.objects.filter(student=request.user, student_agrees=2).count()
-            internships_reverted=InternshipFinalResult.objects.filter(student=request.user, student_agrees=1).count()
+            internships_accepted=InternshipFinalResult.objects.filter(student=request.user).count()
+            internships_reverted=StudentRegistration.objects.filter(student=request.user, result_status=3).count()
             return render(request,'dashboard1/dashboard_student.html',context={"data": data, "my_registrations": my_registrations, "my_selections": my_selections, "internships_accepted": internships_accepted, "internships_reverted": internships_reverted})
     return error_detection(request,1)
 
@@ -1224,70 +1224,71 @@ def show_registrations(request):
         return render(request, "dashboard/registrations.html", context={"registrations": registrations, "session": session})
     return error_detection(request,1)
 
-def internship_action(request,item,type):
-    if error_detection(request,1)==False:
-        if request.user.is_staff or request.user.is_superuser or request.user.last_name==settings.COMPANY_MESSAGE:
-            return redirect('home')
-        data=get_my_profile(request)
-        try:
-            registration=StudentRegistration.objects.get(id=int(item))
-        except:
-            return error(request,"Registration not found")
-        if request.user!=registration.student:
-            return error(request,"Registration not found")
-        if registration.result_status!=1 or registration.internship_cleared==False:
-            return error(request,"May be this is not you are looking for.")
-        try:
-            company_announcement=registration.company
-            internship=registration.company.internship
-        except:
-            return error(request,"Internship not found")
-        if company_announcement.last_round==False or company_announcement.last_round_result_announced==False:
-            return error(request,"Not a last round or final results have not been seized")
-        if internship.result_announced==False:
-            return error(request,"Result of this internship has not been announced")
-        try:
-            internship_result=InternshipFinalResult.objects.filter(internship=internship, student=request.user)
-        except:
-            return error(request,"Internship Result not found")
-        if internship_result.count()!=1:
-            return error(request,"More than 1 resuls found for this, can\'t fetch which to take")
-        if internship_result[0].student_agrees==0:
-            if int(type)==2:
-                result=internship_result[0]
-                result.student_agrees=1
-                result.save()
-                registration.my_action=1
-                registration.save()
-                subject = 'Reverted Back'
-                message = f'You have reverted back your selection in the internship which can\'t be undone, you can try for another interships.<br/>Details of this internship round are as follows:<br/>Company Name: '+str(registration.company.company.first_name)+'<br/>Internship Name: '+str(registration.company.internship.internship_name)+'<br/>Round Number: '+str(registration.company.internship_round)+' (last Round)'
-                email=request.user.email
-                Email_thread(subject,message,email).start()
-                return redirect('show_registrations')
-            elif int(type)==1:
-                result=internship_result[0]
-                result.student_agrees=2
-                result.save()
-                registration.my_action=2
-                registration.save()
-                subject = 'Congratulations! intern'
-                message = f'You have have been sucessfully selected for the internship, we congratulate for being an intern.<br/>Note: According to one student one company policy you can\'t regitser for other internships now.<br/>Details of this internship are as follows:<br/>Company Name: '+str(registration.company.company.first_name)+'<br/>Internship Name: '+str(registration.company.internship.internship_name)
-                email=request.user.email
-                Email_thread(subject,message,email).start()
-                my_registrations=StudentRegistration.objects.filter(student=request.user)
-                my_registrations=my_registrations.exclude(id=int(item))
-                for each in my_registrations:
-                    each.result_status=3
-                    each.save()
-                profile=get_my_profile(request)
-                profile.got_internship=True
-                profile.save()
-                return redirect('show_registrations')
-            else:
-                return error(request,"Page not found")
-        else:
-            return error(request,"You have already taken an action which can\'t be undone")
-    return error_detection(request,1)
+#This feature was in older version where student can take any action on an internship final round.
+# def internship_action(request,item,type):
+#     if error_detection(request,1)==False:
+#         if request.user.is_staff or request.user.is_superuser or request.user.last_name==settings.COMPANY_MESSAGE:
+#             return redirect('home')
+#         data=get_my_profile(request)
+#         try:
+#             registration=StudentRegistration.objects.get(id=int(item))
+#         except:
+#             return error(request,"Registration not found")
+#         if request.user!=registration.student:
+#             return error(request,"Registration not found")
+#         if registration.result_status!=1 or registration.internship_cleared==False:
+#             return error(request,"May be this is not you are looking for.")
+#         try:
+#             company_announcement=registration.company
+#             internship=registration.company.internship
+#         except:
+#             return error(request,"Internship not found")
+#         if company_announcement.last_round==False or company_announcement.last_round_result_announced==False:
+#             return error(request,"Not a last round or final results have not been seized")
+#         if internship.result_announced==False:
+#             return error(request,"Result of this internship has not been announced")
+#         try:
+#             internship_result=InternshipFinalResult.objects.filter(internship=internship, student=request.user)
+#         except:
+#             return error(request,"Internship Result not found")
+#         if internship_result.count()!=1:
+#             return error(request,"More than 1 resuls found for this, can\'t fetch which to take")
+#         if internship_result[0].student_agrees==0:
+#             if int(type)==2:
+#                 result=internship_result[0]
+#                 result.student_agrees=1
+#                 result.save()
+#                 registration.my_action=1
+#                 registration.save()
+#                 subject = 'Reverted Back'
+#                 message = f'You have reverted back your selection in the internship which can\'t be undone, you can try for another interships.<br/>Details of this internship round are as follows:<br/>Company Name: '+str(registration.company.company.first_name)+'<br/>Internship Name: '+str(registration.company.internship.internship_name)+'<br/>Round Number: '+str(registration.company.internship_round)+' (last Round)'
+#                 email=request.user.email
+#                 Email_thread(subject,message,email).start()
+#                 return redirect('show_registrations')
+#             elif int(type)==1:
+#                 result=internship_result[0]
+#                 result.student_agrees=2
+#                 result.save()
+#                 registration.my_action=2
+#                 registration.save()
+#                 subject = 'Congratulations! intern'
+#                 message = f'You have have been sucessfully selected for the internship, we congratulate for being an intern.<br/>Note: According to one student one company policy you can\'t regitser for other internships now.<br/>Details of this internship are as follows:<br/>Company Name: '+str(registration.company.company.first_name)+'<br/>Internship Name: '+str(registration.company.internship.internship_name)
+#                 email=request.user.email
+#                 Email_thread(subject,message,email).start()
+#                 my_registrations=StudentRegistration.objects.filter(student=request.user)
+#                 my_registrations=my_registrations.exclude(id=int(item))
+#                 for each in my_registrations:
+#                     each.result_status=3
+#                     each.save()
+#                 profile=get_my_profile(request)
+#                 profile.got_internship=True
+#                 profile.save()
+#                 return redirect('show_registrations')
+#             else:
+#                 return error(request,"Page not found")
+#         else:
+#             return error(request,"You have already taken an action which can\'t be undone")
+#     return error_detection(request,1)
 
 def delete_internship(request,item):
     if error_detection(request,1)==False:
@@ -1329,15 +1330,23 @@ def accept_discard_students(request,announcement):
     company=request.user
     registrations=StudentRegistration.objects.filter(company=announcement)
     for each in registrations:
-        if each.result_status==1:
+        profile=StudentProfile.objects.get(user=each.student)
+        if each.result_status==1 and profile.got_internship==False:
+            profile.got_internship=True
+            profile.save()
             each.internship_cleared=True
             each.save()
             try:
                 InternshipFinalResult.objects.get(internship=internship, company=company, student=each.student)
             except:
                 InternshipFinalResult.objects.create(internship=internship, company=company, student=each.student)
-            subject = 'Internship Selection Last Round'
-            message = f'You have been selected by the company in the last round of internship.<br/>Details of the last cleared round are as follows:<br/>Company Name: '+str(each.company.company.first_name)+'<br/>Internship Name: '+str(each.company.internship.internship_name)+'<br/>Round Number: '+str(each.company.internship_round)+' (Last Round)'
+            my_registrations=StudentRegistration.objects.filter(student=each.student, company__internship__session=current_session())
+            for e in my_registrations:
+                if e.company!=each.company:
+                    e.result_status=3
+                    e.save()
+            subject = 'Congratulations! intern'
+            message = f'You have have been sucessfully selected for the internship, we congratulate for being an intern.<br/>Note: According to one student one company policy you can\'t regitser for other internships now.<br/>Details of this internship are as follows:<br/>Company Name: '+str(each.company.company.first_name)+'<br/>Internship Name: '+str(each.company.internship.internship_name)
             email=each.student.email
             Email_thread(subject,message,email).start()
         if each.result_status==0:

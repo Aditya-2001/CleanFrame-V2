@@ -20,7 +20,8 @@ class StaffPermissions(models.Model):
     
     can_manage_sessions=models.BooleanField(default=False)
     create_new_accounts=models.BooleanField(default=False)
-    
+    manage_CGPA=models.BooleanField(default=False)
+
     def __str__(self):
         if self.user:
             return self.user.username
@@ -57,11 +58,6 @@ class InternshipFinalResult(models.Model):
     internship=models.ForeignKey(Internship, on_delete=models.CASCADE, null=True, blank=True)
     company=models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True, related_name='company')
     student=models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='student')
-    
-    student_agrees=models.IntegerField(default=0)
-    #0 - Not reacted yet
-    #1 - Reverted
-    #2 - Accepted
     
     def __str__(self):
         if self.internship:
@@ -137,11 +133,6 @@ class StudentRegistration(models.Model):
     #Status 1: Cleared
     #Status 2: Rejected
     #Status 3: Placed in another internship
-    
-    my_action=models.IntegerField(default=0)
-    #0 - Not reacted yet
-    #1 - Reverted
-    #2 - Accepted
 
     def __str__(self):
         return str(self.student.username) + " registered in " + str(self.company)

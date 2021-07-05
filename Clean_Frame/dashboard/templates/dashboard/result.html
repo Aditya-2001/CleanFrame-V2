@@ -4,7 +4,8 @@
 {% block title %}
 <title>Dashboard {{request.user.email}}</title>
 <link rel="icon" href="{% static 'img/logo.png' %}" type="image/x-icon">
-<link rel="stylesheet" href="{% static 'dashboard/css/result.css' %}"> {% endblock %}
+<link rel="stylesheet" href="{% static 'dashboard/css/result.css' %}">
+{% endblock %}
 
 
 {% block sidebar_menu %}
@@ -291,7 +292,7 @@
                             <td>
                                 <button type="button" class="re3 re" onclick="open_uploader()" data-toggle="modal" data-target="#uploader">Upload</button>
                             </td>
-                        <form href="{% url 'stu_result' item=data.id %}" method="POST">
+                        <form href="{% url 'stu_result' item=data.id %}" method="POST" onsubmit="call_preloader()">
                             {% csrf_token %}
                             <input type="hidden" name="students" value="" id="pass_form" required>
                             
@@ -328,10 +329,11 @@
         <p style="margin-left: 10px">5. Temporary Columns are : "Result Status" which can has 2 values only as "Pass" or "Fail". Note: If this column is not given then default status would be passed.</p>
       </div>
       <div class="modal-body">
-        <form action="{% url 'students_result_file_upload' item=data.id %}" method="POST" enctype="multipart/form-data">
+        <form action="{% url 'students_result_file_upload' item=data.id %}" method="POST" enctype="multipart/form-data" onsubmit="call_preloader()">
           {% csrf_token %}
           <input type="file" name="file" accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel" id="file" class="input-field" required>
           <button type="submit" class="btn btn-primary">Upload Results</button>
+          <p id="para" style="display: none; color: green">Uploading Please Wait for a while.</p>
         </form>
         {% comment %} <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button> {% endcomment %}
       </div>

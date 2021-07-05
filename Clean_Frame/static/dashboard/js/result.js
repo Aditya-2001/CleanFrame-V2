@@ -78,3 +78,7 @@ function open_uploader(){
 
     return false;
 }
+
+function call_preloader(){
+    document.getElementById("para").style.display = "block";
+}

@@ -110,7 +110,6 @@ def error_message(request, message):
     return render(request,"home/error_message.html",context={"error": message})
 
 def error_detection(request,id):
-    return False
     if request.user.is_authenticated==False:
         return redirect('home')
     if request.user.is_staff or request.user.is_superuser:

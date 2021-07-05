@@ -7,7 +7,7 @@
 }
 
 .re {
-    padding: 10px 30px;
+    padding: 10px 20px;
     cursor: pointer;
     display: block;
     width: fit-content !important;
@@ -17,7 +17,7 @@
     border-radius: 30px;
     font-family: Poppins;
     font-weight: bold;
-    font-size: 1.2rem;
+    font-size: 1.0rem;
 }
 
 .re1 {
@@ -26,6 +26,10 @@
 
 .re2 {
     background: linear-gradient(to right, #ac580a, #ff0606);
+}
+
+.re3 {
+    background: linear-gradient(90deg, rgba(2,0,36,1) 0%, rgba(116,215,85,1) 0%, rgba(43,90,122,1) 0%, rgba(65,55,210,1) 100%, rgba(0,1,240,1) 100%, rgba(0,212,255,1) 100%);
 }
 
 .myresult {

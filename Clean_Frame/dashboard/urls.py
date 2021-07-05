@@ -29,6 +29,7 @@ urlpatterns = [
     path('announcements/',announcements,name="announcements"),
     path('announcements/edit/<str:item>/',edit_announcement,name="edit_announcement"),
     path('announcements/result/<str:item>', stu_result, name="stu_result"),
+    path('announcements/result/file/upload/<str:item>',students_result_file_upload,name="students_result_file_upload"),
     path('register/company/',show_companies,name="show_companies"),
     path('show/company/details/<str:item>',show_company_round_details,name="show_company_round_details"),
     path('register/company/round/1/id/<str:item>',register_student_first_round_only,name="register_student_first_round_only"),

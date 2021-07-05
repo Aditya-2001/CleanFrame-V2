@@ -898,11 +898,115 @@ def new_announcement(request):
             return render(request, 'dashboard/new_announcement.html', context={"data": data})
     return error_detection(request,1)
 
-def stu_result(request, item):
+def students_result_file_upload(request, item):
     if error_detection(request,1)==False:
         if request.user.last_name!=settings.COMPANY_MESSAGE:
             return redirect('home')
         data=get_my_profile(request)
+        if request.method == "POST":
+            try:
+                data=CompanyAnnouncement.objects.get(id=int(item))
+            except:
+                return error(request,"Announcement Not Found")
+            if data.company!=request.user:
+                return error(request,"Announcement Not Found")
+            announcement=data
+            form=NewUserForm(request.POST,request.FILES)
+            if form.is_valid():
+                file=form.cleaned_data.get('file')
+                if str(file).endswith('.csv'):
+                    # csv file
+                    data=pd.read_csv(file)
+                elif str(file).endswith('.xlsx'):
+                    # excel file
+                    data=pd.read_excel(file)
+                else:
+                    students=get_students(request, announcement)
+                    return render(request, 'dashboard/result.html', context={"data": announcement, "students": students, "error": 'Not an excel or csv file'})     
+                return students_result_file_upload_helper(request,data,announcement)
+            students=get_students(request, announcement)
+            return render(request, 'dashboard/result.html', context={"data": announcement, "students": students, "error": str(form.errors)})
+        else:
+            return redirect('dashboard')
+    return error_detection(request,1)
+
+def students_result_file_upload_helper(request,data,announcement):
+    students=get_students(request, announcement)
+    email_given=False
+    status_given=False
+    if 'Email' not in data.columns and 'Username' not in data.columns:
+        return render(request, 'dashboard/result.html', context={"data": announcement, "students": students, "error": '"Email or Username column was not found in the file.'})     
+    if 'Email' in data.columns:
+        email_given=True
+    if 'Result Status' in data.columns:
+        status_given=True
+
+    field_on_operation=0
+    if email_given:
+        field_on_operation=data['Email']
+    else:
+        field_on_operation=data['Username']
+
+    field_with_unknown_values=[]
+    field_with_student_not_found=[]
+    for i in range(len(field_on_operation)):
+        field=field_on_operation[i]
+        result_status=1
+        if status_given:
+            if data["Result Status"][i]=="Fail":
+                result_status=2
+        if field:
+            try:
+                user=0
+                if email_given:
+                    user=User.objects.get(email=field)
+                else:
+                    user=User.objects.get(username=field)
+                if user.is_staff or user.is_superuser or user.last_name==settings.COMPANY_MESSAGE:
+                    field_with_student_not_found.append(i+1)
+                else:
+                    try:
+                        get_re=StudentRegistration.objects.get(student=user, company=announcement)  
+                        if get_re.result_status==0:
+                            get_re.result_status=result_status
+                            get_re.save()
+                            if result_status==1:
+                                subject = 'Internship Round Cleared'
+                                message = f'We congratulate you for clearing the round in internship.<br/>Details of cleared round are as follows:<br/>Company Name: '+str(get_re.company.company.first_name)+'<br/>Internship Name: '+str(get_re.company.internship.internship_name)+'<br/>Round Number: '+str(get_re.company.internship_round)
+                                Email_thread(subject,message,get_re.student.email).start()  
+                            else:
+                                subject = 'Internship Round Result'
+                                message = f'We feel apology telling you that you have been rejected in an internship round.<br/>Details of this round are as follows:<br/>Company Name: '+str(get_re.company.company.first_name)+'<br/>Internship Name: '+str(get_re.company.internship.internship_name)+'<br/>Round Number: '+str(get_re.company.internship_round)
+                                Email_thread(subject,message,get_re.student.email).start()  
+                    except:
+                        pass
+            except:
+                field_with_student_not_found.append(i+1)
+        else:
+            field_with_unknown_values.append(i+1)
+    students=get_students(request, announcement)
+    if len(field_with_unknown_values)==0 and len(field_with_student_not_found)==0:
+        return render(request, 'dashboard/result.html', context={"data": announcement, "students": students, "success": "Results uploaded successfully."})
+    elif len(field_with_unknown_values)==0:
+        error="Rows in which student account was not found or this student never registered are : "+str(field_with_student_not_found)+" . You can cross-verify, results uploaded for the rest of the rows."
+    elif len(field_with_student_not_found)==0:
+        error="Rows with empty email or empty username or undefined result status are : "+str(field_with_unknown_values)+" . You can cross-verify, results uploaded for the rest of the rows."
+    else:
+        error1="Rows in which student account not found are : "+str(field_with_student_not_found)+" ."
+        error2="Rows with empty email or empty username or undefined account type are : "+str(field_with_unknown_values)+" .\nYou can cross-verify, results uploaded for the rest of the rows."
+        error=error1+"\n"+error2
+    return render(request, 'dashboard/result.html', context={"data": announcement, "students": students, "error": error})
+
+def stu_result(request, item):
+    if error_detection(request,1)==False:
+        if request.user.last_name!=settings.COMPANY_MESSAGE:
+            return redirect('home')
+        try:
+            data=CompanyAnnouncement.objects.get(id=int(item))
+        except:
+            return error(request,"Announcement Not Found")
+        if data.company!=request.user:
+            return error(request,"Announcement Not Found")
         if request.method == "POST":
             students=request.POST.get("students")
             if len(students)<=3:
@@ -933,12 +1037,6 @@ def stu_result(request, item):
                 return redirect('stu_result', item)
             return error(request,"INVALID REQUEST")
         else:
-            try:
-                data=CompanyAnnouncement.objects.get(id=int(item))
-            except:
-                return error(request,"Announcement Not Found")
-            if data.company!=request.user:
-                return error(request,"Announcement Not Found")
             students=get_students(request, data)
             return render(request, 'dashboard/result.html', context={"data": data, "students": students})
     return error_detection(request,1)

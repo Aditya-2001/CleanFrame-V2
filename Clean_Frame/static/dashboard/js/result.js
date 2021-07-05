@@ -73,3 +73,8 @@ function not_fail_me() {
     n = document.getElementById('pass_form').value.length
     document.getElementById('pass_form').value = document.getElementById('pass_form').value.substring(0, n - 3)
 }
+
+function open_uploader(){
+
+    return false;
+}

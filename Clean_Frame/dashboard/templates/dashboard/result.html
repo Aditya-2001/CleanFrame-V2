@@ -146,27 +146,41 @@
 {% block dashboard_title %} Result Announcement {% endblock %}
 
 <!--For the user details displayed at the top right-->
-
+{% block section_main %}
 
 <!--For the main section : 3-->
-{% block section_main %}
-{% if data.last_round_result_announced %}
-<div class="alert alert-dismissible fade show" role="alert" style="background-color: #CEDA6A">
-  <strong>Final Result has been announced</strong>
-  <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-    <span aria-hidden="true">&times;</span>
-  </button>
-</div>
-{% endif %}
+
 <main>
+
+{% if data.last_round_result_announced %}
+  <div class="alert alert-dismissible fade show" role="alert" style="background-color: #CEDA6A">
+    <strong>Final Result has been announced</strong>
+  </div>
+{% else %}
+  {% if data.last_round %}
+      <div class="alert alert-dismissible fade show" role="alert" style="background-color: #CEDA6A">
+      <strong><a href="{% url 'seeze_results' item=data.id %}" onclick="return confirm('This will decline all the registrations for this internship.\nYou can see the final students list in My Internships Section\n\nIf you close browser or stopped processing in between then result may not be generated properly, so wait patiently.')">Seeze Results</a></strong>
+    </div>
+             
+  {% endif %}
+{% endif %}
+
+{% if error %}
+  <div class="alert alert-dismissible fade show" role="alert" style="background-color: #F46A3E">
+    <strong>{{error}}</strong>
+  </div>
+{% endif %}
+
+{% if success %}
+  <div class="alert alert-dismissible fade show" role="alert" style="background-color: green">
+    <strong>{{success}}</strong>
+  </div>
+{% endif %}
     <div class="recent-grid1">
         <div class="projects">
             <div class="card">
                 <div class="card-header">
                     <h3 style="margin-left: 13%;">All Registrations</h3>
-                    {% if data.last_round %}
-                    <a href="{% url 'seeze_results' item=data.id %}" onclick="return confirm('This will decline all the registrations for this internship.\nYou can see the final students list in My Internships Section\n\nIf you close browser or stopped processing in between then result may not be generated properly, so wait patiently.')">Seeze Results</a>
-                    {% endif %}
                     <button type="button" onclick="toexcel('#myTable')" style="width: 170px; text-align: center;">Export to excel</button>
                     <!-- <div id="myTable_filter" class="search-wrapper1">
                 <span class="las la-search"></span>
@@ -180,7 +194,7 @@
                   <span class="las la-search"></span>
                   <input type="search" aria-controls="myTable" placeholder="Search User">
                 </div> -->
-                        <table id="myTable">
+                        <table id="myTable" class="display nowrap" style="width: 100%">
                             <thead id="thead">
                                 <tr id="tr1" style="text-align: center;">
                                     <td>#</td>
@@ -274,12 +288,15 @@
             <div class="myresult">
                 <table>
                     <tr>
+                            <td>
+                                <button type="button" class="re3 re" onclick="open_uploader()" data-toggle="modal" data-target="#uploader">Upload</button>
+                            </td>
                         <form href="{% url 'stu_result' item=data.id %}" method="POST">
                             {% csrf_token %}
                             <input type="hidden" name="students" value="" id="pass_form" required>
-
+                            
+                            
                             <td>
-
                                 <button type="submit" class="re1 re" onmouseout="not_pass_me()" onmouseover="pass_me()">Pass</button>
                             </td>
                             <td>
@@ -290,6 +307,37 @@
             </div>
             <p style="color: red">Note: these actions can't be undone</p>
         </div>
+
+
+<!-- Modal -->
+<div class="modal fade" id="uploader" tabindex="-1" role="dialog" aria-labelledby="uploaderLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="uploaderLabel">Upload Results</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p>Please read these instructions before uploading results to avoid any type of confusion:</p>
+        <p style="margin-left: 10px">1. Only CSV and EXCEL files are allowed. <a href="{% static 'sample/Sample_Result_Upload.zip' %}">Sample Excel File</a></p>
+        <p style="margin-left: 10px">2. There could be multiple columns, there order does not matter, for example - consider columns A and B, A can be given in the column after or before B but inside A column, only A's entries should be there.</p>
+        <p style="margin-left: 10px">3. If any duplicate entry is found, then first copy will be taken and rest will be dropped.</p>
+        <p style="margin-left: 10px">4. Compulsory Columns are : Email or Username (Any One is sufficient. If both are given then email will be taken). Column Names should be in title case.</p>
+        <p style="margin-left: 10px">5. Temporary Columns are : "Result Status" which can has 2 values only as "Pass" or "Fail". Note: If this column is not given then default status would be passed.</p>
+      </div>
+      <div class="modal-body">
+        <form action="{% url 'students_result_file_upload' item=data.id %}" method="POST" enctype="multipart/form-data">
+          {% csrf_token %}
+          <input type="file" name="file" accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel" id="file" class="input-field" required>
+          <button type="submit" class="btn btn-primary">Upload Results</button>
+        </form>
+        {% comment %} <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button> {% endcomment %}
+      </div>
+    </div>
+  </div>
+</div>
 
 </main>
 <script type="text/javascript " src="{% static 'dashboard/js/result.js' %} "></script>

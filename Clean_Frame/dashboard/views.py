@@ -2344,6 +2344,9 @@ def remove_students_helper(request, data, permissions, data_to_pass):
     return render(request,'dashboard/student_accounts.html',context={ "permissions": permissions, "data": data_to_pass, "new_error": error})
 
 
+
+
+
 def remove_companies(request):
     if error_detection(request,1)==False:
         if request.user.is_staff==False and request.user.is_superuser==False:
@@ -2420,3 +2423,91 @@ def remove_companies_helper(request, data, permissions, data_to_pass):
         error2="Rows with empty email or empty username  are : "+str(field_with_unknown_values)+" .\nYou can cross-verify, and for rest of the rows accounts were deleted."
         error=error1+"\n"+error2
     return render(request,'dashboard/company_accounts.html',context={ "permissions": permissions, "data": data_to_pass, "new_error": error})
+
+
+def upload_cgpa(request):
+    if error_detection(request,1)==False:
+        if request.user.is_staff==False and request.user.is_superuser==False:
+            return redirect('home')
+        try:
+            permissions=StaffPermissions.objects.get(user=request.user)
+            if permissions.manage_CGPA==False:
+                return error(request,"You don't have permission to access this page")
+        except:
+            StaffPermissions.objects.create(user=request.user)
+            return redirect('dashboard')
+        data=StudentProfile.objects.filter(verified=False, account_banned_permanent=False,  account_banned_temporary=False, user__is_active=True).order_by('signup_date')
+        if request.method=="POST":
+            form=NewUserForm(request.POST,request.FILES)
+            if form.is_valid():
+                file=form.cleaned_data['file']
+                if str(file).endswith('.csv'):
+                    # csv file
+                    data1=pd.read_csv(file)
+                elif str(file).endswith('.xlsx'):
+                    # excel file
+                    data1=pd.read_excel(file)
+                else:
+                    return render(request,'dashboard/student_accounts.html',context={ "permissions": get_permissions(request), "data": data, "new_error": "Not an excel or csv file"})       
+                return upload_cgpa_helper(request, data1, permissions, data)
+            return render(request,'dashboard/student_accounts.html',context={ "permissions": get_permissions(request), "data": data, "new_error": str(form.errors)})
+        else:
+            return redirect('student_account_signup_permit')
+    return error_detection(request,1)
+
+def upload_cgpa_helper(request, data, permissions, data_to_pass):
+    email_given=False
+    if 'Email' not in data.columns and 'Username' not in data.columns:
+        return render(request,'dashboard/student_accounts.html',context={ "permissions": permissions, "data": data_to_pass, "new_error": "Email or Username column was not found in the file."})
+    if 'Email' in data.columns:
+        email_given=True
+    if 'CGPA' not in data.columns:
+        return render(request,'dashboard/student_accounts.html',context={ "permissions": permissions, "data": data_to_pass, "new_error": "CGPA column was not found in the file."})
+
+    field_on_operation=0
+    if email_given:
+        field_on_operation=data['Email']
+    else:
+        field_on_operation=data['Username']
+
+    field_with_unknown_values=[]
+    field_with_student_not_found=[]
+    for i in range(len(field_on_operation)):
+        field=field_on_operation[i]
+        cgpa=data["CGPA"][i]
+        if field:
+            try:
+                user=0
+                if email_given:
+                    user=User.objects.get(email=field)
+                else:
+                    user=User.objects.get(username=field)
+                if user.is_staff or user.is_superuser or user.last_name==settings.COMPANY_MESSAGE:
+                    field_with_student_not_found.append(i+1)
+                else:
+                    if cgpa<0 or cgpa>10:
+                        field_with_unknown_values.append(i+1)
+                        continue
+                    cgpa=float(cgpa)
+                    profile=StudentProfile.objects.get(user=user)
+                    old_cgpa=profile.cgpa
+                    profile.cgpa=cgpa
+                    profile.save()
+                    subject="CGPA Updated on CleanFrame"
+                    message="This is to notify that your CGPA has been updated from " + str(old_cgpa) + " to " + str(cgpa) +" by our staff in CleanFrame."
+                    Email_thread(subject,message,user.email).start()
+            except:
+                field_with_student_not_found.append(i+1)
+        else:
+            field_with_unknown_values.append(i+1)
+    if len(field_with_unknown_values)==0 and len(field_with_student_not_found)==0:
+        return render(request,'dashboard/student_accounts.html',context={ "permissions": permissions, "data": data_to_pass, "success": "CV successfully updated for all the students."})
+    elif len(field_with_unknown_values)==0:
+        error="Rows in which student account was not found are : "+str(field_with_student_not_found)+" . You can cross-verify, and for rest of the rows cgpa was uploaded."
+    elif len(field_with_student_not_found)==0:
+        error="Rows with empty email or empty username are : "+str(field_with_unknown_values)+" . You can cross-verify, and for rest of the rows cgpa was uploaded."
+    else:
+        error1="Rows in which student account not found are : "+str(field_with_student_not_found)+" ."
+        error2="Rows with empty email or empty username  are : "+str(field_with_unknown_values)+" .\nYou can cross-verify,and for rest of the rows cgpa was uploaded."
+        error=error1+"\n"+error2
+    return render(request,'dashboard/student_accounts.html',context={ "permissions": permissions, "data": data_to_pass, "new_error": error})

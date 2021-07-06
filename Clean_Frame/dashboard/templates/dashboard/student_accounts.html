@@ -240,14 +240,14 @@
       </div>
       <div class="modal-body">
         <p>Please read these instructions before uploading CGPA to avoid any type of confusion:</p>
-        <p style="margin-left: 10px">1. Only CSV and EXCEL files are allowed. <a href="{% static 'sample/Sample_Result_Upload.zip' %}">Sample Excel File</a></p>
+        <p style="margin-left: 10px">1. Only CSV and EXCEL files are allowed. <a href="{% static 'sample/upload_cgpa.zip' %}">Sample Excel File</a></p>
         <p style="margin-left: 10px">2. There could be multiple columns, there order does not matter, for example - consider columns A and B, A can be given in the column after or before B but inside A column, only A's entries should be there.</p>
         <p style="margin-left: 10px">3. If any duplicate entry is found, then first copy will be taken and rest will be dropped.</p>
         <p style="margin-left: 10px">4. Compulsory Columns are : Email or Username (Any One is sufficient. If both are given then email will be taken) and CGPA of students. Column Names should be in title case.</p>
         <p style="margin-left: 10px">5. If account is validated and its not a student account then that row would simply be dropped off.</p>
       </div>
       <div class="modal-body">
-        <form action="#" method="POST" enctype="multipart/form-data" onsubmit="call_preloader1()">
+        <form action="{% url 'upload_cgpa' %}" method="POST" enctype="multipart/form-data" onsubmit="call_preloader1()">
           {% csrf_token %}
           <input type="file" name="file" accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel" class="input-field" required>
           <button type="submit" class="btn btn-primary">Upload CGPA</button>

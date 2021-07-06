@@ -70,4 +70,6 @@ urlpatterns = [
     path('manage/sessions/',manage_sessions,name="manage_sessions"),
     path('remove/students/',remove_students,name="remove_students"),
     path('remove/companies/',remove_companies,name="remove_companies"),
+    path('upload/cgpa/',upload_cgpa,name="upload_cgpa"),
+    
 ]

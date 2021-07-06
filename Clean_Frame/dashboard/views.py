@@ -934,7 +934,7 @@ def students_result_file_upload_helper(request,data,announcement):
     email_given=False
     status_given=False
     if 'Email' not in data.columns and 'Username' not in data.columns:
-        return render(request, 'dashboard/result.html', context={"data": announcement, "students": students, "error": '"Email or Username column was not found in the file.'})     
+        return render(request, 'dashboard/result.html', context={"data": announcement, "students": students, "error": 'Email or Username column was not found in the file.'})     
     if 'Email' in data.columns:
         email_given=True
     if 'Result Status' in data.columns:
@@ -1057,9 +1057,8 @@ def internship_result(request,item):
 
 #TO be COmpleted
 def get_students(request, announcement):
-    name=announcement.internship.internship_name
-    round=announcement.internship_round
-    get_stu=StudentRegistration.objects.filter(company__internship__internship_name=name)
+    name=announcement.internship
+    get_stu=StudentRegistration.objects.filter(company__internship=name)
     return get_stu
 
 def show_companies(request):
@@ -2267,4 +2266,157 @@ def search_users(request):
 def error(request, message):
     return render(request,"home/error_page.html",context={"error": message})
 
+def remove_students(request):
+    if error_detection(request,1)==False:
+        if request.user.is_staff==False and request.user.is_superuser==False:
+            return redirect('home')
+        try:
+            permissions=StaffPermissions.objects.get(user=request.user)
+            if permissions.remove_students==False:
+                return error(request,"You don't have permission to access this page")
+        except:
+            StaffPermissions.objects.create(user=request.user)
+            return redirect('dashboard')
+        data=StudentProfile.objects.filter(verified=False, account_banned_permanent=False,  account_banned_temporary=False, user__is_active=True).order_by('signup_date')
+        if request.method=="POST":
+            form=NewUserForm(request.POST,request.FILES)
+            if form.is_valid():
+                file=form.cleaned_data['file']
+                if str(file).endswith('.csv'):
+                    # csv file
+                    data1=pd.read_csv(file)
+                elif str(file).endswith('.xlsx'):
+                    # excel file
+                    data1=pd.read_excel(file)
+                else:
+                    return render(request,'dashboard/student_accounts.html',context={ "permissions": get_permissions(request), "data": data, "new_error": "Not an excel or csv file"})       
+                return remove_students_helper(request, data1, permissions, data)
+            return render(request,'dashboard/student_accounts.html',context={ "permissions": get_permissions(request), "data": data, "new_error": str(form.errors)})
+        else:
+            return redirect('student_account_signup_permit')
+    return error_detection(request,1)
 
+def remove_students_helper(request, data, permissions, data_to_pass):
+    email_given=False
+    if 'Email' not in data.columns and 'Username' not in data.columns:
+        return render(request,'dashboard/student_accounts.html',context={ "permissions": permissions, "data": data_to_pass, "new_error": "Email or Username column was not found in the file."})
+    if 'Email' in data.columns:
+        email_given=True
+
+    field_on_operation=0
+    if email_given:
+        field_on_operation=data['Email']
+    else:
+        field_on_operation=data['Username']
+
+    field_with_unknown_values=[]
+    field_with_student_not_found=[]
+    for i in range(len(field_on_operation)):
+        field=field_on_operation[i]
+        if field:
+            try:
+                user=0
+                if email_given:
+                    user=User.objects.get(email=field)
+                else:
+                    user=User.objects.get(username=field)
+                if user.is_staff or user.is_superuser or user.last_name==settings.COMPANY_MESSAGE:
+                    field_with_student_not_found.append(i+1)
+                else:
+                    subject="Account Deletion Notice"
+                    message="This is to notify that your student account has been deleted by our staff in CleanFrame."
+                    Email_thread(subject,message,user.email).start()
+                    user.delete()
+            except:
+                field_with_student_not_found.append(i+1)
+        else:
+            field_with_unknown_values.append(i+1)
+    if len(field_with_unknown_values)==0 and len(field_with_student_not_found)==0:
+        return render(request,'dashboard/student_accounts.html',context={ "permissions": permissions, "data": data_to_pass, "success": "All these students were deleted successfully."})
+    elif len(field_with_unknown_values)==0:
+        error="Rows in which student account was not found are : "+str(field_with_student_not_found)+" . You can cross-verify, and for rest of the rows accounts were deleted."
+    elif len(field_with_student_not_found)==0:
+        error="Rows with empty email or empty username are : "+str(field_with_unknown_values)+" . You can cross-verify, and for rest of the rows accounts were deleted."
+    else:
+        error1="Rows in which student account not found are : "+str(field_with_student_not_found)+" ."
+        error2="Rows with empty email or empty username  are : "+str(field_with_unknown_values)+" .\nYou can cross-verify, and for rest of the rows accounts were deleted."
+        error=error1+"\n"+error2
+    return render(request,'dashboard/student_accounts.html',context={ "permissions": permissions, "data": data_to_pass, "new_error": error})
+
+
+def remove_companies(request):
+    if error_detection(request,1)==False:
+        if request.user.is_staff==False and request.user.is_superuser==False:
+            return redirect('home')
+        try:
+            permissions=StaffPermissions.objects.get(user=request.user)
+            if permissions.remove_companies==False:
+                return error(request,"You don't have permission to access this page")
+        except:
+            StaffPermissions.objects.create(user=request.user)
+            return redirect('dashboard')
+        data=CompanyProfile.objects.filter(verified=False, account_banned_permanent=False,  account_banned_temporary=False, user__is_active=True).order_by('signup_date')
+        if request.method=="POST":
+            form=NewUserForm(request.POST,request.FILES)
+            if form.is_valid():
+                file=form.cleaned_data['file']
+                if str(file).endswith('.csv'):
+                    # csv file
+                    data1=pd.read_csv(file)
+                elif str(file).endswith('.xlsx'):
+                    # excel file
+                    data1=pd.read_excel(file)
+                else:
+                    return render(request,'dashboard/company_accounts.html',context={ "permissions": get_permissions(request), "data": data, "new_error": "Not an excel or csv file"})       
+                return remove_companies_helper(request, data1, permissions, data)
+            return render(request,'dashboard/company_accounts.html',context={ "permissions": get_permissions(request), "data": data, "new_error": str(form.errors)})
+        else:
+            return redirect('company_account_signup_permit')
+    return error_detection(request,1)
+
+def remove_companies_helper(request, data, permissions, data_to_pass):
+    email_given=False
+    if 'Email' not in data.columns and 'Username' not in data.columns:
+        return render(request,'dashboard/company_accounts.html',context={ "permissions": permissions, "data": data_to_pass, "new_error": "Email or Username column was not found in the file."})
+    if 'Email' in data.columns:
+        email_given=True
+
+    field_on_operation=0
+    if email_given:
+        field_on_operation=data['Email']
+    else:
+        field_on_operation=data['Username']
+
+    field_with_unknown_values=[]
+    field_with_company_not_found=[]
+    for i in range(len(field_on_operation)):
+        field=field_on_operation[i]
+        if field:
+            try:
+                user=0
+                if email_given:
+                    user=User.objects.get(email=field)
+                else:
+                    user=User.objects.get(username=field)
+                if user.is_staff or user.is_superuser or user.last_name!=settings.COMPANY_MESSAGE:
+                    field_with_company_not_found.append(i+1)
+                else:
+                    subject="Account Deletion Notice"
+                    message="This is to notify that your company account has been deleted by our staff in CleanFrame."
+                    Email_thread(subject,message,user.email).start()
+                    user.delete()
+            except:
+                field_with_company_not_found.append(i+1)
+        else:
+            field_with_unknown_values.append(i+1)
+    if len(field_with_unknown_values)==0 and len(field_with_company_not_found)==0:
+        return render(request,'dashboard/company_accounts.html',context={ "permissions": permissions, "data": data_to_pass, "success": "All these companies were deleted successfully."})
+    elif len(field_with_unknown_values)==0:
+        error="Rows in which company account was not found are : "+str(field_with_company_not_found)+" . You can cross-verify, and for rest of the rows accounts were deleted."
+    elif len(field_with_company_not_found)==0:
+        error="Rows with empty email or empty username are : "+str(field_with_unknown_values)+" . You can cross-verify, and for rest of the rows accounts were deleted."
+    else:
+        error1="Rows in which company account not found are : "+str(field_with_company_not_found)+" ."
+        error2="Rows with empty email or empty username  are : "+str(field_with_unknown_values)+" .\nYou can cross-verify, and for rest of the rows accounts were deleted."
+        error=error1+"\n"+error2
+    return render(request,'dashboard/company_accounts.html',context={ "permissions": permissions, "data": data_to_pass, "new_error": error})

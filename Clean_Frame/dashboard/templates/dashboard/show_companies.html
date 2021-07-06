@@ -186,7 +186,7 @@
               <h5 class="card-title">{{each.data.round_name}}, {{each.data.internship.internship_name}}</h5>
               
               {% if data.got_internship %}
-                <p class="card-text">Internship duration offered is {{each.data.internship.internship_duration}} days, with a stipend of Rs. {{each.data.internship.stipend}}. Position Offered is {{each.data.internship.internship_position}}. You can register more for this session since you have got one internship, let others gain oppurtunity.</p>
+                <p class="card-text">Internship duration offered is {{each.data.internship.internship_duration}} days, with a stipend of Rs. {{each.data.internship.stipend}}. Position Offered is {{each.data.internship.internship_position}}. You can't register more for this session since you have got one internship, let others gain oppurtunity.</p>
                 <p class="card-text">{{each.data.message}}</p>
                 <h6 style="float: right">{% if each.data.file_for_prev_result %}<a href="{{each.data.file_for_prev_result.url}}">Information</a>{% endif %}</h6>
                 <a href="#" class="btn btn-primary">Can't Register</a>

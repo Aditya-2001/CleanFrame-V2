@@ -605,3 +605,12 @@ input {
   padding-left: 10px;
   padding-right: 10px;
 }
+
+.matching_button{
+  background: var(--main-color);
+  border-radius: 10px;
+  color: #fff;
+  font-size: .8rem;
+  padding: .5rem 1rem;
+  border: 1px solid var(--main-color);
+}

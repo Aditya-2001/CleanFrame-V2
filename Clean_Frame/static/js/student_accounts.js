@@ -1,0 +1,6 @@
+function call_preloader1(){
+    document.getElementById("para1").style.display="block"
+}
+function call_preloader2(){
+    document.getElementById("para2").style.display="block"
+}

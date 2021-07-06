@@ -151,6 +151,9 @@
 <!--For the main section : 3-->
 {% block section_main %}
 <main>
+    <div class="alert alert-danger" role="alert" style="font-size: 1.5rem">
+      Company Accounts pending for verification
+    </div>
     {% if request.user.is_authenticated and request.user.is_staff %} {% ifequal code 0 %}
     <h6 style="text-align: center; color: red;" id="message">ERROR: Profile Not Found</h6>
     {% endifequal %} {% ifequal code 1 %}
@@ -162,25 +165,27 @@
     {% endifequal %} {% ifequal code 4 %}
     <h6 style="text-align: center; color: red;" id="message">ERROR: Profile Status once verified can't be deleted</h6>
     {% endifequal %}
+
+    {% if success %}
+    <h6 style="text-align: center; color: green;" id="message">{{success}}</h6>
+    {% endif %}
+
+    {% if new_error %}
+    <h6 style="text-align: center; color: red;" id="message">{{new_error}}</h6>
+    {% endif %}
+
+
     <div class="recent-grid1">
         <div class="projects">
             <div class="card">
-                <div class="card-header">
-                    <h3 style="margin-left: 13%;">Company Accounts pending for verification</h3>
-                    <button type="button" onclick="toexcel('#myTable')" style="width: 170px; text-align: center;">Export to excel</button>
-                    <!-- <div id="myTable_filter" class="search-wrapper1">
-                <span class="las la-search"></span>
-                <input type="search" aria-controls="myTable" placeholder="Search User">
-              </div> -->
-                    <!-- <button type="button" name="See all">See all <span class="las la-arrow-right"></span></button> -->
-                </div>
                 <div class="card-body">
+                  <div style="margin-bottom: 30px">
+                    {% if permissions.remove_companies %}
+                      <button type="button" class="matching_button" style="float: right; margin-right: 20px" data-toggle="modal" data-target="#remove_companies">Remove Companies</button>
+                    {% endif %}
+                  </div><br>
                     <div class="table-responsive container">
-                        <!-- <div id="myTable_filter" class="search-wrapper1 dataTables_filter">
-                  <span class="las la-search"></span>
-                  <input type="search" aria-controls="myTable" placeholder="Search User">
-                </div> -->
-                        <table id="myTable">
+                        <table id="myTable" class="display nowrap" style="width: 100%">
                             <thead id="thead">
                                 <tr id="tr1" style="text-align: center;">
                                     <td>Company ID</td>
@@ -215,5 +220,38 @@
         </div>
         {% endif %}
 </main>
+
+<!-- Modal -->
+<div class="modal fade" id="remove_companies" tabindex="-1" role="dialog" aria-labelledby="uploaderLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="remove_companiesLabel">Remove Companies</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p>Please read these instructions before removing companies to avoid any type of confusion:</p>
+        <p style="margin-left: 10px">1. Only CSV and EXCEL files are allowed. <a href="{% static 'sample/remove_companies.zip' %}">Sample Excel File</a></p>
+        <p style="margin-left: 10px">2. There could be multiple columns, there order does not matter, for example - consider columns A and B, A can be given in the column after or before B but inside A column, only A's entries should be there.</p>
+        <p style="margin-left: 10px">3. If any duplicate entry is found, then first copy will be taken and rest will be dropped.</p>
+        <p style="margin-left: 10px">4. Compulsory Columns are : Email or Username (Any One is sufficient. If both are given then email will be taken). Column Names should be in title case.</p>
+        <p style="margin-left: 10px">5. If account is validated and its not a company account then that row would simply be dropped.</p>
+      </div>
+      <div class="modal-body">
+        <form action="{% url 'remove_companies' %}" method="POST" enctype="multipart/form-data" onsubmit="call_preloader2()">
+          {% csrf_token %}
+          <input type="file" name="file" accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel" class="input-field" required>
+          <button type="submit" class="btn btn-primary">Remove Companies</button>
+          <p id="para2" style="display: none; color: green">Removing... Please Wait for a while.</p>
+        </form>
+        {% comment %} <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button> {% endcomment %}
+      </div>
+    </div>
+  </div>
+</div>
+
 <script src="{% static 'dashboard/js/timer.js' %}"></script>
+<script src="{% static 'js/student_accounts.js' %}"></script>
 {% endblock %}

@@ -21,6 +21,8 @@ class StaffPermissions(models.Model):
     can_manage_sessions=models.BooleanField(default=False)
     create_new_accounts=models.BooleanField(default=False)
     manage_CGPA=models.BooleanField(default=False)
+    remove_students=models.BooleanField(default=False)
+    remove_companies=models.BooleanField(default=False)
 
     def __str__(self):
         if self.user:

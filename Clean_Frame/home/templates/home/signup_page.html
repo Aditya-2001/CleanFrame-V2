@@ -47,7 +47,7 @@
                 
                 <!--To make just next heading in its position-->
                 <h5 id="myerror" style="text-align: center; color: red; margin-top: 10px;"></h5>
-                <form id="login" class="input-group1"> {% csrf_token %}
+                <form id="login" class="input-group1" enctype="multipart/form-data"> {% csrf_token %}
                     <input type="text" class="input-field1" id="email" name="email" placeholder="College Email Id" />
                     <input type="text" class="input-field1" id="username" name="username" placeholder="Username" />
                     <input type="text" class="input-field1" id="fname" name="first_name" {% if error %} value={{f_name}} {% endif %} placeholder="First Name" />
@@ -59,7 +59,7 @@
                     <button type="submit" id="button1" class="submit-btn">SignUp</button>
                 </form>
                 
-                <form id="register" class="input-group1"> {% csrf_token %}
+                <form id="register" class="input-group1" enctype="multipart/form-data"> {% csrf_token %}
                     <input type="text" class="input-field1" id="email1" name="email" placeholder="Company Email Id" />
                     <input type="text" class="input-field1" id="username1" name="username" placeholder="Username" />
                     <input type="text" class="input-field1" id="fname1" name="first_name" placeholder="Company Name" />

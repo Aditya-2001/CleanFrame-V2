@@ -50,6 +50,7 @@ class CompanyProfile(models.Model):
     unique_code=models.CharField(max_length=100, null=True)
     unique_code_time=models.DateTimeField(default=datetime.datetime.now())
     code_expired=models.BooleanField(default=False)
+    let_staff_manage=models.BooleanField(default=False)
 
     def __str__(self):
         if self.user:

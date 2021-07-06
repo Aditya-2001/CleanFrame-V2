@@ -41,6 +41,7 @@ urlpatterns = [
     path('announcement/delete/<str:item>',delete_announcement,name="delete_announcement"),
     path('profile/student/<str:item>',check_student_profile,name="check_student_profile"),
     path('profile/company/<str:item>',check_company_profile,name="check_company_profile"),
+    path('profile/company/change/mode/<str:item>',company_change_mode,name="company_change_mode"),
     path('profile/staff/<str:item>',check_staff_profile,name="check_staff_profile"),
     path('results/seeze/<str:item>',seeze_results,name="seeze_results"),
     path('internships/result/<str:item>',internship_result,name="internship_result"),

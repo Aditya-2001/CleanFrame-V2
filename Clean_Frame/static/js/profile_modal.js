@@ -50,3 +50,20 @@ function text_changed(myval) {
         activatebtn.style.pointerEvents = "none";
     }
 }
+
+function call_slider(){
+        var serializedData = $(this).serialize();
+        myid=document.getElementById("myid").innerHTML
+        $.ajax({
+            type: 'GET',
+            url: "../company/change/mode/"+myid,
+            data: serializedData,
+            success: function (response) {
+                alert('Mode Changed Successfully')
+                location.reload()
+            },
+            error: function (response) {
+                alert(response["responseJSON"]["error"])
+            }
+        })
+}

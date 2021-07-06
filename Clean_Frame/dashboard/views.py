@@ -1512,6 +1512,28 @@ def check_company_profile(request, item):
         return render(request,'dashboard/profile_page_company.html',context={"data": data, "image": image, "general_announcements": general_announcements})
     return error_detection(request,1)
 
+def company_change_mode(request,item):
+    if error_detection(request,1)==False:
+        try:
+            user_profile=User.objects.get(id=int(item))
+            data=get_passed_profile(user_profile)
+            if data=={}:
+                return error(request,"Profile Not Found")
+        except:
+            return error(request,"Profile Not Found")
+        if user_profile.last_name!=settings.COMPANY_MESSAGE or user_profile.is_staff or user_profile.is_superuser:
+            return error(request,"Profile Not Found")
+        try:
+            if data.let_staff_manage:
+                data.let_staff_manage=False
+            else:
+                data.let_staff_manage=True
+            data.save()
+            return JsonResponse({"success": "Done Dana Done"}, status=200)
+        except:
+            return JsonResponse({"error": "Internal Error"}, status=400)
+    return error_detection(request,1)
+
 def check_staff_profile(request,item):
     if error_detection(request,1)==False:
         try:

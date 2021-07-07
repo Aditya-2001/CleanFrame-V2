@@ -21,6 +21,27 @@
             <span>Profile</span>
           </a>
         </li>
+        {% if permissions.can_manage_sessions %}
+        <li>
+            <a href="{% url 'manage_sessions' %}" class=""><span class="las la-info-circle"></span>
+            <span>Manage Sessions </span>
+          </a>
+        </li>
+        {% endif %} 
+        {% if permissions.create_new_accounts %}
+        <li>
+            <a href="{% url 'create_accounts' %}" class=""><span class="las la-user-plus"></span>
+            <span>Create Accounts </span>
+          </a>
+        </li>
+        {% endif %} 
+        {% if permissions.can_manage_internships %}
+        <li>
+            <a href="{% url 'manage_company_internships' %}" class=""><span class="las la-user-plus"></span>
+            <span>Manage Internships </span>
+          </a>
+        </li>
+        {% endif %} 
         {% if permissions.can_access_student_inactive_accounts %}
         <li>
             <a href="{% url 'student_account_signup_permit' %}"><span class="las la-graduation-cap"></span>
@@ -44,13 +65,6 @@
         <li>
             <a href="{% url 'unban_user' item='0' %}" class=""><span class="las la-user"></span>
             <span>Un-restrict Users </span>
-          </a>
-        </li>
-        {% endif %} 
-        {% if permissions.create_new_accounts %}
-        <li>
-            <a href="{% url 'create_accounts' %}" class=""><span class="las la-user-plus"></span>
-            <span>Create Accounts </span>
           </a>
         </li>
         {% endif %} 
@@ -79,20 +93,6 @@
         <li>
             <a href="{% url 'technical_support_assist' %}" class=""><span class="las la-info-circle"></span>
             <span>Manage Support </span>
-          </a>
-        </li>
-        {% endif %} 
-        {% if permissions.can_activate_session %}
-        <li>
-            <a href="{% url 'activate_new_session' %}" class=""><span class="las la-info-circle"></span>
-            <span>Activate New Session </span>
-          </a>
-        </li>
-        {% endif %} 
-        {% if permissions.can_manage_sessions %}
-        <li>
-            <a href="{% url 'manage_sessions' %}" class=""><span class="las la-info-circle"></span>
-            <span>Manage Sessions </span>
           </a>
         </li>
         {% endif %} 

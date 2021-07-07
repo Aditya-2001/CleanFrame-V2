@@ -72,5 +72,6 @@ urlpatterns = [
     path('remove/students/',remove_students,name="remove_students"),
     path('remove/companies/',remove_companies,name="remove_companies"),
     path('upload/cgpa/',upload_cgpa,name="upload_cgpa"),
-    
+    path('manage/company/internships/',manage_company_internships,name="manage_company_internships"),
+    path('manage/company/internships/enter/<str:item>',login_as_a_company,name="login_as_a_company"),
 ]

@@ -18,6 +18,7 @@ from email.mime.image import MIMEImage
 from django.contrib.staticfiles import finders
 from functools import lru_cache
 import pandas as pd
+from background_task import background
 
 class Email_thread(Thread):
     def __init__(self,subject,message,email):
@@ -1524,6 +1525,8 @@ def company_change_mode(request,item):
         if user_profile.last_name!=settings.COMPANY_MESSAGE or user_profile.is_staff or user_profile.is_superuser:
             return error(request,"Profile Not Found")
         try:
+            if user_profile!=request.user:
+                return error(request,"Profile Not Found")
             if data.let_staff_manage:
                 data.let_staff_manage=False
             else:
@@ -2245,6 +2248,109 @@ def respond_support(request,item):
         threads=get_all_threads(int(item))
         return render(request,'dashboard1/show_all_threads.html',context={"support": support, "threads": threads, "permissions": permissions})
     return error_detection(request,1)
+
+def manage_company_internships(request):
+    if error_detection(request,1)==False:
+        if request.user.is_staff==False and request.user.is_superuser==False:
+            return redirect('home')
+        try:
+            permissions=StaffPermissions.objects.get(user=request.user)
+            if permissions.can_manage_internships==False:
+                return error(request,"You don't have permission to access this page")
+        except:
+            StaffPermissions.objects.create(user=request.user)
+            return redirect('dashboard')
+        
+        company_accounts=CompanyProfile.objects.filter(let_staff_manage=True)
+        
+        return render(request,'dashboard1/manage_company_internships.html',context={"company_accounts": company_accounts, "permissions": permissions})
+    return error_detection(request,1)
+
+def login_as_a_company(request,item):
+    if error_detection(request,1)==False:
+        if request.user.is_staff==False and request.user.is_superuser==False:
+            return redirect('home')
+        try:
+            permissions=StaffPermissions.objects.get(user=request.user)
+            if permissions.can_manage_internships==False:
+                return error(request,"You don't have permission to access this page")
+        except:
+            StaffPermissions.objects.create(user=request.user)
+            return redirect('dashboard')
+        
+
+        try:
+            profile=CompanyProfile.objects.get(id=int(item))
+        except:
+            return error(request,"Profile Not Found")
+        if profile.let_staff_manage==False:
+            return error(request,"Company does not want you to manage his internships.")
+        if profile.engaged==True:
+            return error(request,"This account is already engaged.")
+
+            # if still_engaged(profile):
+            #     return error(request,"This account is already engaged.")
+            # else:
+            #     profile.engaged=False
+            #     profile.save()
+            #     return redirect('login_as_a_company',item)
+        
+        profile.engaged=True
+        # profile.engaged_on=datetime.datetime.now()
+        profile.original_user=profile.user
+        profile.user2=profile.user
+        profile.user=request.user
+        profile.is_this_staff_superuser=request.user.is_superuser
+        profile.staff_last_name=request.user.last_name
+        profile.staff_first_name=request.user.first_name
+        profile.save()
+        EngagedChecker(str(profile.id)).run()
+        user=request.user
+        user.is_staff=False
+        user.is_superuser=False
+        user.last_name=settings.COMPANY_MESSAGE
+        user.first_name=profile.user2.first_name
+        user.save()
+        login(request,profile.user)
+        
+        return redirect('dashboard')
+    return error_detection(request,1)
+
+class EngagedChecker(Thread):
+    def __init__(self,profile):
+        self.profile=profile
+        Thread.__init__(self)
+
+    def run(self):
+        turn_off_engaged(self.profile, schedule=50 + int(settings.ENGAGED_EXPIRE_TIME*60))
+
+@background(schedule=10)
+def turn_off_engaged(profile):
+    profile=CompanyProfile.objects.get(id=int(profile))
+    user=profile.user
+    user.is_staff=True
+    user.is_superuser=profile.is_this_staff_superuser
+    user.last_name=profile.staff_last_name
+    user.first_name=profile.staff_first_name
+    user.save()
+    profile.engaged=False
+    profile.user=profile.user2
+    profile.save()
+    
+
+# def still_engaged(profile):
+#     old_time=profile.engaged_on
+#     profile.engaged_on=datetime.datetime.now()
+#     profile.save()
+#     new_time=profile.engaged_on
+#     profile.engaged_on=old_time
+#     profile.save()
+#     minutes=((new_time-old_time).total_seconds())/60
+
+#     if minutes<settings.ENGAGED_EXPIRE_TIME:
+#         return True
+#     return False
+
 
 def get_all_threads(id):
     threads=[]

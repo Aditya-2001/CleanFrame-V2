@@ -42,8 +42,10 @@ INSTALLED_APPS = [
     'home',
     'dashboard',
     'django_cleanup',
+    'background_task',
     
 ]
+# py manage.py process_tasks
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -151,5 +153,6 @@ BASE_URL="http://127.0.0.1:8000"
 # BASE_URL="https://clean-frame.herokuapp.com"
 
 TEMORARY_BAN_TIME=30
+ENGAGED_EXPIRE_TIME=0
 
 USE_TZ=True

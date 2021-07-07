@@ -33,7 +33,7 @@ class StudentProfile(models.Model):
             return 'NILL'
 
 class CompanyProfile(models.Model):
-    user=models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
+    user=models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True, related_name="MAIN_USER")
     contact_number=models.IntegerField(null=True)
     complete_address=models.CharField(max_length=1000, null=True)
     image=models.ImageField(upload_to='post_images/', default="us_ma.png")
@@ -51,6 +51,12 @@ class CompanyProfile(models.Model):
     unique_code_time=models.DateTimeField(default=datetime.datetime.now())
     code_expired=models.BooleanField(default=False)
     let_staff_manage=models.BooleanField(default=False)
+    user2=models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name="ORDINARY_USER")
+    original_user=models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name="ORIGINAL")
+    engaged=models.BooleanField(default=False)
+    is_this_staff_superuser=models.BooleanField(default=False)
+    staff_last_name=models.CharField(max_length=1000, null=True)
+    staff_first_name=models.CharField(max_length=1000, null=True)
 
     def __str__(self):
         if self.user:

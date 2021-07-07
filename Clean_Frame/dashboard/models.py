@@ -24,6 +24,8 @@ class StaffPermissions(models.Model):
     remove_students=models.BooleanField(default=False)
     remove_companies=models.BooleanField(default=False)
 
+    can_manage_internships=models.BooleanField(default=False)
+
     def __str__(self):
         if self.user:
             return self.user.username

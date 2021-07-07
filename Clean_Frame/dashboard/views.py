@@ -2047,11 +2047,15 @@ def edit_staff_permissions(request, item):
             data.can_access_student_inactive_accounts=True if request.POST.get('can_access_student_inactive_accounts')=="1" else False
             data.can_access_company_inactive_accounts=True if request.POST.get('can_access_company_inactive_accounts')=="1" else False
             data.can_ban_users=True if request.POST.get('can_ban_users')=="1" else False
-            data.can_create_new_company_account=True if request.POST.get('can_create_new_company_account')=="1" else False
             data.can_manage_blogs=True if request.POST.get('can_manage_blogs')=="1" else False
             data.can_manage_technical_support=True if request.POST.get('can_manage_technical_support')=="1" else False
             data.can_give_notifications=True if request.POST.get('can_give_notifications')=="1" else False
-            data.can_manage_sessions=True if request.POST.get('can_activate_session')=="1" else False
+            data.can_manage_sessions=True if request.POST.get('can_manage_sessions')=="1" else False
+            data.create_new_accounts=True if request.POST.get('can_create_new_accounts')=="1" else False
+            data.manage_CGPA=True if request.POST.get('can_manage_cgpa')=="1" else False
+            data.remove_students=True if request.POST.get('can_remove_students')=="1" else False
+            data.remove_companies=True if request.POST.get('can_remove_companies')=="1" else False
+            data.can_manage_internships=True if request.POST.get('can_manage_internships')=="1" else False
             data.save()
             return redirect('edit_staff_permissions',item)
         else:
@@ -2095,11 +2099,15 @@ def create_new_staff_account(request):
             data.can_access_student_inactive_accounts=True if request.POST.get('can_access_student_inactive_accounts')=="1" else False
             data.can_access_company_inactive_accounts=True if request.POST.get('can_access_company_inactive_accounts')=="1" else False
             data.can_ban_users=True if request.POST.get('can_ban_users')=="1" else False
-            data.can_create_new_company_account=True if request.POST.get('can_create_new_company_account')=="1" else False
             data.can_manage_blogs=True if request.POST.get('can_manage_blogs')=="1" else False
             data.can_manage_technical_support=True if request.POST.get('can_manage_technical_support')=="1" else False
             data.can_give_notifications=True if request.POST.get('can_give_notifications')=="1" else False
-            data.can_manage_sessions=True if request.POST.get('can_activate_session')=="1" else False
+            data.can_manage_sessions=True if request.POST.get('can_manage_sessions')=="1" else False
+            data.create_new_accounts=True if request.POST.get('can_create_new_accounts')=="1" else False
+            data.manage_CGPA=True if request.POST.get('can_manage_cgpa')=="1" else False
+            data.remove_students=True if request.POST.get('can_remove_students')=="1" else False
+            data.remove_companies=True if request.POST.get('can_remove_companies')=="1" else False
+            data.can_manage_internships=True if request.POST.get('can_manage_internships')=="1" else False
             data.save()
             return redirect('manage_staff_accounts')
         else:
@@ -2287,16 +2295,8 @@ def login_as_a_company(request,item):
             return error(request,"Company does not want you to manage his internships.")
         if profile.engaged==True:
             return error(request,"This account is already engaged.")
-
-            # if still_engaged(profile):
-            #     return error(request,"This account is already engaged.")
-            # else:
-            #     profile.engaged=False
-            #     profile.save()
-            #     return redirect('login_as_a_company',item)
         
         profile.engaged=True
-        # profile.engaged_on=datetime.datetime.now()
         profile.original_user=profile.user
         profile.user2=profile.user
         profile.user=request.user

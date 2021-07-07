@@ -147,17 +147,17 @@
                             <div class="row">
                                 <div class="col-lg-4">
                                     <div class="form-group focused">
-                                        <input type="text" {% if permissions.can_create_new_company_account %} style="background-color: rgb(64, 201, 64); color: white" value="Can Create New Company Account" {% else %} style="background-color: rgb(212, 79, 79); color: white" value="Can't Create New Company Account" {% endif %} class="form-control form-control-alternative" readonly>
-                                    </div>
-                                </div>
-                                <div class="col-lg-4">
-                                    <div class="form-group focused">
                                         <input type="text" {% if permissions.can_manage_blogs %} style="background-color: rgb(64, 201, 64); color: white" value="Can Manage Blogs" {% else %} style="background-color: rgb(212, 79, 79); color: white" value="Can't Manage Blogs" {% endif %} class="form-control form-control-alternative" readonly>
                                     </div>
                                 </div>
                                 <div class="col-lg-4">
                                     <div class="form-group focused">
                                         <input type="text" {% if permissions.can_manage_technical_support %} style="background-color: rgb(64, 201, 64); color: white" value="Can Manage Technical Support" {% else %} style="background-color: rgb(212, 79, 79); color: white" value="Can't Manage Technical Support" {% endif %} class="form-control form-control-alternative" readonly>
+                                    </div>
+                                </div>
+                                <div class="col-lg-4">
+                                    <div class="form-group focused">
+                                        <input type="text" {% if permissions.can_manage_sessions %} style="background-color: rgb(64, 201, 64); color: white" value="Can Manage Sessions" {% else %} style="background-color: rgb(212, 79, 79); color: white" value="Can't Manage Sessions" {% endif %} class="form-control form-control-alternative" readonly>
                                     </div>
                                 </div>
                             </div>
@@ -183,10 +183,34 @@
                             <div class="row">
                                 <div class="col-lg-4">
                                     <div class="form-group focused">
-                                        <input type="text" {% if permissions.can_activate_session %} style="background-color: rgb(64, 201, 64); color: white" value="Can Activate Sessions" {% else %} style="background-color: rgb(212, 79, 79); color: white" value="Can't Activate Sessions" {% endif %} class="form-control form-control-alternative" readonly>
+                                        <input type="text" {% if permissions.create_new_accounts %} style="background-color: rgb(64, 201, 64); color: white" value="Can Create New Accounts" {% else %} style="background-color: rgb(212, 79, 79); color: white" value="Can't Create New Accounts" {% endif %} class="form-control form-control-alternative" readonly>
+                                    </div>
+                                </div>
+                                <div class="col-lg-4">
+                                    <div class="form-group focused">
+                                        <input type="text" {% if permissions.manage_CGPA %} style="background-color: rgb(64, 201, 64); color: white" value="Can Manage CGPA" {% else %} style="background-color: rgb(212, 79, 79); color: white" value="Can't Manage CGPA" {% endif %} class="form-control form-control-alternative" readonly>
+                                    </div>
+                                </div>
+                                <div class="col-lg-4">
+                                    <div class="form-group focused">
+                                        <input type="text" {% if permissions.remove_students %} style="background-color: rgb(64, 201, 64); color: white" value="Can Remove Students" {% else %} style="background-color: rgb(212, 79, 79); color: white" value="Can't Remove Students" {% endif %} class="form-control form-control-alternative" readonly>
                                     </div>
                                 </div>
                             </div>
+
+                            <div class="row">
+                                <div class="col-lg-4">
+                                    <div class="form-group focused">
+                                        <input type="text" {% if permissions.remove_companies %} style="background-color: rgb(64, 201, 64); color: white" value="Can Remove Companies" {% else %} style="background-color: rgb(212, 79, 79); color: white" value="Can't Remove Companies" {% endif %} class="form-control form-control-alternative" readonly>
+                                    </div>
+                                </div>
+                                <div class="col-lg-4">
+                                    <div class="form-group focused">
+                                        <input type="text" {% if permissions.can_manage_internships %} style="background-color: rgb(64, 201, 64); color: white" value="Can Manage Internships" {% else %} style="background-color: rgb(212, 79, 79); color: white" value="Can't Manage Internships" {% endif %} class="form-control form-control-alternative" readonly>
+                                    </div>
+                                </div>
+                            </div>
+
                             
                         </div>
                     </form>

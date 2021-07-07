@@ -69,6 +69,7 @@ urlpatterns = [
     path('account/delete/',delete_account,name="delete_account"),
     path('search/users/',search_users,name="search_users"),
     path('manage/sessions/',manage_sessions,name="manage_sessions"),
+    path('manage/sessions/get/result/<str:item>',manage_sessions_get_result,name="manage_sessions_get_result"),
     path('remove/students/',remove_students,name="remove_students"),
     path('remove/companies/',remove_companies,name="remove_companies"),
     path('upload/cgpa/',upload_cgpa,name="upload_cgpa"),

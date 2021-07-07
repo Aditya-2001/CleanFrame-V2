@@ -97,22 +97,6 @@ class CompanyAnnouncement(models.Model):
         else:
             return 'NILL'
 
-# class Result(models.Model):
-#     company=models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True, related_name='company')
-#     student=models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='student')
-#     internship_round=models.CharField(max_length=100, null=True)
-
-#     def __str__(self):
-#         if self.company:
-#             if self.student:
-#                 return str(self.student) + " cleared round " + str(self.internship_round) + " of " + str(self.company)
-#             else:
-#                 return str(self.company)
-#         else:
-#             if self.student:
-#                 return str(self.student)
-#             else:
-#                 return "NIL"
 
 class ProfileVisibility(models.Model):
     user=models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)

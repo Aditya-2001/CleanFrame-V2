@@ -213,7 +213,7 @@ def signup(request):
         if int(signup_type)==1:
             profile=StudentProfile.objects.create(user=user)
         else:
-            profile=CompanyProfile.objects.create(user=user)
+            profile=CompanyProfile.objects.create(user=user, original_user=user)
         message = f'New signup request has been detected from your email. Click the given URL to confirm the signup '
         if signup_send_notification(email,profile,message)==False:
             return JsonResponse({"error": "Error in sending notification."},status=400)

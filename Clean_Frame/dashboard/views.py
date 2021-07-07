@@ -79,9 +79,10 @@ def dashboard(request):
             students_with_internship=StudentProfile.objects.filter(got_internship=True).count()
             return render(request,'dashboard1/dashboard_staff.html',context={"data": data, "staff_count": staff, "admin_count": admin, "company_count": company, "student_count": student, "permissions": get_permissions(request), "students_with_internship": students_with_internship})
         if request.user.last_name==settings.COMPANY_MESSAGE:
-            internships_with_result=Internship.objects.filter(company=request.user, result_announced=True).count()
-            internships_without_result=Internship.objects.filter(company=request.user, result_announced=False).count()
-            internships=Internship.objects.filter(company=request.user)
+            user=CompanyProfile.objects.get(user=request.user).original_user
+            internships_with_result=Internship.objects.filter(company=user, result_announced=True).count()
+            internships_without_result=Internship.objects.filter(company=user, result_announced=False).count()
+            internships=Internship.objects.filter(company=user)
             registrations=0
             for each in internships:
                 registrations+=StudentRegistration.objects.filter(company__internship=each).count()
@@ -681,21 +682,21 @@ def new_announcement_round(request):
         if request.user.last_name!=settings.COMPANY_MESSAGE:
             return redirect('home')
         data=get_my_profile(request)
-        internships=Internship.objects.filter(company=request.user, session=current_session())
+        internships=Internship.objects.filter(company=data.original_user, session=current_session())
         prev_round_for_result=0
         if request.method == "POST":
             internship_name=request.POST.get('internship_name')
             internship_round=int(request.POST.get('internship_round'))
             try:
                 int_obj=Internship.objects.get(id=int(internship_name))
-                CompanyAnnouncement.objects.get(company=request.user, internship_round=internship_round, internship=int_obj)
+                CompanyAnnouncement.objects.get(company=data.original_user, internship_round=internship_round, internship=int_obj)
                 return render(request, 'dashboard/new_round.html', context={"data": data, "internships": internships, "error": "This round has been already declared"})
             except:
                 pass
             if(internship_round>1):
                 prev_round_for_result=request.POST.get('prev_round_for_result')
                 try:
-                    c=CompanyAnnouncement.objects.get(company=request.user, internship_round=prev_round_for_result, internship=int_obj)
+                    c=CompanyAnnouncement.objects.get(company=data.original_user, internship_round=prev_round_for_result, internship=int_obj)
                 except:
                     return render(request, 'dashboard/new_round.html', context={"data": data, "internships": internships, "error": "No announcement found with the given previous round number"})
                 if c.last_round==True:
@@ -711,7 +712,7 @@ def new_announcement_round(request):
                 myid=x.id
                 last_date_to_apply=request.POST.get('last_date_to_apply')
                 com_ann=CompanyAnnouncement.objects.get(id=myid)
-                com_ann.company=request.user
+                com_ann.company=data.original_user
                 last_round=request.POST.get("last_round")
                 if int(last_round)==2:
                     com_ann.last_round=True
@@ -724,14 +725,14 @@ def new_announcement_round(request):
                 com_ann.save()
                 if internship_round!=1:
                     com_ann=CompanyAnnouncement.objects.get(id=myid)
-                    prev_ann=CompanyAnnouncement.objects.get(company=request.user, internship_round=prev_round_for_result, internship=int_obj)
+                    prev_ann=CompanyAnnouncement.objects.get(company=data.original_user, internship_round=prev_round_for_result, internship=int_obj)
                     register_students_for_next_round(request, prev_ann, com_ann)
                     notify_other_students_for_rejection(request, prev_ann, com_ann)
                 return redirect('new_announcement_success', '1')
             else:
                 return render(request, 'dashboard/new_round.html', context={"data": data, "internships": internships, "error": form.errors})
         else:
-            internships=Internship.objects.filter(company=request.user, session=current_session())
+            internships=Internship.objects.filter(company=data.original_user, session=current_session())
             return render(request, 'dashboard/new_round.html', context={"data": data, "internships": internships})
     return error_detection(request,1)
 
@@ -762,7 +763,7 @@ def new_announcement_success(request, item):
             return redirect('home')
         else:
             data=get_my_profile(request)
-            internships=Internship.objects.filter(company=request.user)
+            internships=Internship.objects.filter(company=data.original_user)
             if item=='1':
                 return render(request, 'dashboard/new_round.html', context={"data": data, "success": "Announcement Created", "internships": internships})
             if item=='2':
@@ -787,10 +788,10 @@ def announce_internship(request):
                 pre=request.POST.get('pre')
                 internship_name=request.POST.get('internship_name')
                 try:
-                    Internship.objects.get(session=session, company=request.user, internship_name=internship_name, stipend=stipend, internship_duration=duration, students_required=no_stu, internship_position=intern_pos, minimum_cgpa=min_cgpa, prerequisite=pre)
+                    Internship.objects.get(session=session, company=data.original_user, internship_name=internship_name, stipend=stipend, internship_duration=duration, students_required=no_stu, internship_position=intern_pos, minimum_cgpa=min_cgpa, prerequisite=pre)
                     return JsonResponse({"error": "Internship with same details already exists"}, status=400)
                 except:
-                    Internship.objects.create(session=session, company=request.user, internship_name=internship_name, stipend=stipend, internship_duration=duration, students_required=no_stu, internship_position=intern_pos, minimum_cgpa=min_cgpa, prerequisite=pre)
+                    Internship.objects.create(session=session, company=data.original_user, internship_name=internship_name, stipend=stipend, internship_duration=duration, students_required=no_stu, internship_position=intern_pos, minimum_cgpa=min_cgpa, prerequisite=pre)
                     return JsonResponse({"success": "internship created"}, status=200)
             # GO FOR GET METHOD
             return render(request, 'dashboard/new_internship.html', context={"data": data, "session": session})
@@ -800,7 +801,7 @@ def announcements(request):
     if error_detection(request,1)==False:
         if request.user.last_name!=settings.COMPANY_MESSAGE:
             return redirect('home')
-        announcements=CompanyAnnouncement.objects.filter(company=request.user).order_by('announcement_date')
+        announcements=CompanyAnnouncement.objects.filter(company=CompanyProfile.objects.get(user=request.user).original_user).order_by('announcement_date')
         return render(request, 'dashboard/announcements.html', context={"announcements": announcements})
     return error_detection(request,1)
 
@@ -808,7 +809,7 @@ def internships(request):
     if error_detection(request,1)==False:
         if request.user.last_name!=settings.COMPANY_MESSAGE:
             return redirect('home')
-        internships=Internship.objects.filter(company=request.user)
+        internships=Internship.objects.filter(company=CompanyProfile.objects.get(user=request.user).original_user)
         sessions=Session.objects.all().order_by('-active')
         return render(request, 'dashboard/internships.html', context={"internships": internships,"sessions": sessions})
     return error_detection(request,1)
@@ -820,7 +821,7 @@ def edit_internship(request, item):
         if request.method=="POST":
             try:
                 data=Internship.objects.get(id=int(item))
-                if data.company!=request.user:
+                if data.company!=CompanyProfile.objects.get(user=request.user).original_user:
                     return JsonResponse({"error": "Internship Not Found"}, status=400)
                 data.internship_name=request.POST.get('internship_name')
                 data.internship_duration=int(request.POST.get('duration'))
@@ -836,7 +837,7 @@ def edit_internship(request, item):
         else:
             try:
                 data=Internship.objects.get(id=int(item))
-                if data.company!=request.user:
+                if data.company!=CompanyProfile.objects.get(user=request.user).original_user:
                     return error(request,"Internship not found")
             except:
                 return error(request,"Internship not found")
@@ -849,7 +850,7 @@ def edit_announcement(request, item):
             return redirect('home')
         if request.method=="POST":
             data=CompanyAnnouncement.objects.get(id=int(item))
-            if data.company!=request.user:
+            if data.company!=CompanyProfile.objects.get(user=request.user).original_user:
                 return error(request,"Announcement not found")
             internship_round=int(request.POST.get('internship_round'))
             form = CompanyAnnouncementForm(request.POST,request.FILES)
@@ -877,7 +878,7 @@ def edit_announcement(request, item):
         else:
             try:
                 data=CompanyAnnouncement.objects.get(id=int(item))
-                if data.company!=request.user:
+                if data.company!=CompanyProfile.objects.get(user=request.user).original_user:
                     return error(request,"Announcement not found")
             except:
                 return error(request,"Announcement not found")
@@ -894,7 +895,7 @@ def new_announcement(request):
             if form.is_valid():
                 x=form.save()
                 com_ann=CompanyAnnouncement.objects.get(id=x.id)
-                com_ann.company=request.user
+                com_ann.company=data.original_user
                 com_ann.general_announcement=True
                 com_ann.save()
                 return redirect('new_announcement_success', '2')
@@ -914,7 +915,7 @@ def students_result_file_upload(request, item):
                 data=CompanyAnnouncement.objects.get(id=int(item))
             except:
                 return error(request,"Announcement Not Found")
-            if data.company!=request.user:
+            if data.company!=CompanyProfile.objects.get(user=request.user).original_user:
                 return error(request,"Announcement Not Found")
             announcement=data
             form=NewUserForm(request.POST,request.FILES)
@@ -1011,7 +1012,7 @@ def stu_result(request, item):
             data=CompanyAnnouncement.objects.get(id=int(item))
         except:
             return error(request,"Announcement Not Found")
-        if data.company!=request.user:
+        if data.company!=CompanyProfile.objects.get(user=request.user).original_user:
             return error(request,"Announcement Not Found")
         if request.method == "POST":
             students=request.POST.get("students")
@@ -1055,7 +1056,7 @@ def internship_result(request,item):
             internship=Internship.objects.get(id=int(item))
         except:
             return error(request,"Result Not Found")
-        if internship.company!=request.user:
+        if internship.company!=CompanyProfile.objects.get(user=request.user).original_user:
             return error(request,"Announcement Not Found")
         students=InternshipFinalResult.objects.filter(internship=internship)
         data=get_my_profile(request)
@@ -1163,7 +1164,6 @@ def register_student_first_round_only(request, item):
         try:
             ann=CompanyAnnouncement.objects.get(id=int(item))
             s_data=StudentProfile.objects.get(user=request.user)
-            c_data=CompanyProfile.objects.get(user=ann.company)
         except:
             return render(request, 'dashboard/show_companies.html', context={"data": data, "companies": eligible_companies, "error": "Error in fetching your profile or announcement not found"})
         if ann.first_round==False:
@@ -1302,7 +1302,7 @@ def delete_internship(request,item):
             return redirect('home')
         try:
             inter=Internship.objects.get(id=int(item))
-            if inter.company==request.user:
+            if inter.company==CompanyProfile.objects.get(user=request.user).original_user:
                 inter.delete()
                 return redirect('internships')
             else:
@@ -1318,7 +1318,7 @@ def seeze_results(request,item):
             return redirect('home')
         try:
             comann=CompanyAnnouncement.objects.get(id=int(item))
-            if comann.company!=request.user:
+            if comann.company!=CompanyProfile.objects.get(user=request.user).original_user:
                 return error(request,"Announcement Details not found")
             if comann.last_round==False:
                 return error(request,"Not a last round")
@@ -1333,7 +1333,7 @@ def seeze_results(request,item):
 
 def accept_discard_students(request,announcement):
     internship=announcement.internship
-    company=request.user
+    company=CompanyProfile.objects.get(user=request.user).original_user
     registrations=StudentRegistration.objects.filter(company=announcement)
     for each in registrations:
         profile=StudentProfile.objects.get(user=each.student)
@@ -1376,11 +1376,11 @@ def delete_announcement(request, item):
             return redirect('home')
         try:
             comann=CompanyAnnouncement.objects.get(id=int(item))
-            if comann.company!=request.user:
+            if comann.company!=CompanyProfile.objects.get(user=request.user).original_user:
                 return error(request,"Announcement Details not found")
             previous_round = comann.prev_round_for_result
             round_no=int(comann.internship_round)
-            if comann.company==request.user:
+            if comann.company==CompanyProfile.objects.get(user=request.user).original_user:
                 if comann.last_round==True and comann.last_round_result_announced==True:
                     return error(request,"This Announcement can't be deleted because its results are seized")
                 if round_no > 1:
@@ -1515,7 +1515,7 @@ def check_company_profile(request, item):
         if user_profile.last_name!=settings.COMPANY_MESSAGE or user_profile.is_staff or user_profile.is_superuser:
             return error(request,"Profile Not Found")
         image=data.image
-        general_announcements=CompanyAnnouncement.objects.filter(company=user_profile, general_announcement=True).order_by('-announcement_date')
+        general_announcements=CompanyAnnouncement.objects.filter(company=data.original_user, general_announcement=True).order_by('-announcement_date')
         return render(request,'dashboard/profile_page_company.html',context={"data": data, "image": image, "general_announcements": general_announcements})
     return error_detection(request,1)
 
@@ -1533,7 +1533,7 @@ def company_change_mode(request,item):
         if user_profile.last_name!=settings.COMPANY_MESSAGE or user_profile.is_staff or user_profile.is_superuser:
             return error(request,"Profile Not Found")
         try:
-            if user_profile!=request.user:
+            if user_profile!=CompanyProfile.objects.get(user=request.user).original_user:
                 return error(request,"Profile Not Found")
             if data.let_staff_manage:
                 data.let_staff_manage=False
@@ -1858,7 +1858,7 @@ def create_accounts_helper(request,data,permissions):
             if account_type == "student":
                 StudentProfile.objects.create(user=user, verified=True, cgpa=float(cgpa))
             else:
-                CompanyProfile.objects.create(user=user, verified=True)
+                CompanyProfile.objects.create(user=user, verified=True, original_user=user)
         else:
             field_with_unknown_values.append(i+1)
 
@@ -1931,6 +1931,25 @@ def manage_sessions(request):
             return JsonResponse({"success": "Session created"}, status=200)
         sessions=Session.objects.all().order_by('active')
         return render(request,'dashboard1/manage_sessions.html',context={"permissions": permissions, "sessions": sessions})
+    return error_detection(request,1)
+
+def manage_sessions_get_result(request,item):
+    if error_detection(request,1)==False:
+        if request.user.is_staff==False and request.user.is_superuser==False:
+            return redirect('home')
+        try:
+            permissions=StaffPermissions.objects.get(user=request.user)
+            if permissions.can_manage_sessions==False:
+                return error(request,"You don't have permission to access this page")
+        except:
+            StaffPermissions.objects.create(user=request.user)
+            return redirect('dashboard')
+        try:
+            session=Session.objects.get(id=int(item))
+        except:
+            return error(request,"Session Not Found")
+        results=InternshipFinalResult.objects.filter(internship__session=session)
+        return render(request,'dashboard1/manage_sessions_get_result.html',context={"permissions": permissions, "session": session, "results": results})
     return error_detection(request,1)
 
 def current_session():

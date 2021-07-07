@@ -153,6 +153,6 @@ BASE_URL="http://127.0.0.1:8000"
 # BASE_URL="https://clean-frame.herokuapp.com"
 
 TEMORARY_BAN_TIME=30
-ENGAGED_EXPIRE_TIME=0
+ENGAGED_EXPIRE_TIME=20
 
 USE_TZ=True

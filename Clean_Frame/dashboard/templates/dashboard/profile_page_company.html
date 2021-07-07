@@ -61,13 +61,13 @@
                         {% else %}
                         <a href="{% url 'show_companies' %}" style="color: white" class="btn btn-info"> Register</a> 
                         {% endifequal %}
-                        {% ifequal request.user data.user %}
+                        {% ifequal request.user data.original_user %}
                             <a style="color: white" class="btn btn-danger" id="delete_account"> Delete Account</a> 
                      
                         {% endifequal %}
                     </div>
                     <div class="col-lg-12 col-md-12" style="margin-top: 50px !important; ">
-                        {% ifequal request.user data.user %}
+                        {% ifequal request.user data.original_user %}
 
                             {% if data.let_staff_manage %}
                                     <p class="text-white" style="margin-top: 2px; float : left">On turning this off, staff can't manage your internships</p>

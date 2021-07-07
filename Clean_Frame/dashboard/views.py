@@ -544,6 +544,12 @@ def student_company_number(request):
 
 def change_password(request):
     if error_detection(request,1)==False:
+        try:
+            profile=CompanyProfile.objects.get(user=request.user)
+            if profile.engaged:
+                return error(request,"You don't have permission to access this page")
+        except:
+            pass
         data=get_my_profile(request)
         if request.method=="POST":
             password=request.POST.get('password2')
@@ -1517,6 +1523,8 @@ def company_change_mode(request,item):
     if error_detection(request,1)==False:
         try:
             user_profile=User.objects.get(id=int(item))
+            if user_profile.engaged:
+                return error(request,"Permission Denied.")
             data=get_passed_profile(user_profile)
             if data=={}:
                 return error(request,"Profile Not Found")
@@ -2116,6 +2124,12 @@ def create_new_staff_account(request):
 
 def notifications(request):
     if error_detection(request,1)==False:
+        try:
+            profile=CompanyProfile.objects.get(user=request.user)
+            if profile.engaged:
+                return error(request,"You don't have permission to access this page")
+        except:
+            pass
         notifications=Notification.objects.filter(notification_receiver=request.user).order_by('-date')
         if notifications.count()==0:
             notifications="0"
@@ -2322,7 +2336,7 @@ class EngagedChecker(Thread):
         Thread.__init__(self)
 
     def run(self):
-        turn_off_engaged(self.profile, schedule=50 + int(settings.ENGAGED_EXPIRE_TIME*60))
+        turn_off_engaged(self.profile, schedule=120 + int(settings.ENGAGED_EXPIRE_TIME*60))
 
 @background(schedule=10)
 def turn_off_engaged(profile):
@@ -2361,6 +2375,12 @@ def get_all_threads(id):
 
 def delete_account(request):
     if error_detection(request,1)==False:
+        try:
+            profile=CompanyProfile.objects.get(user=request.user)
+            if profile.engaged:
+                return error(request,"Permission Denied.")
+        except:
+            pass
         try:
             u=User.objects.get(username=request.user)
             email=u.email

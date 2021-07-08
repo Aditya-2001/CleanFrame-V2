@@ -154,8 +154,14 @@
 <!--For the main section : 3-->
 {% block section_main %}
 <main>
-    <div class="alert alert-danger" role="alert" style="font-size: 0.9rem">
-      Note: Any staff is not allowed to enter in when the account is already engaged. Once entered into company account, you will be logged out from our account and logged in as the company account with a engaged key. Engaged mode will automatically turned off in some hours and until it on you will not able to access your account.
+    <div class="alert alert-danger" role="alert" style="font-size: 1.2rem">
+      Note: Any staff is not allowed to enter in when the account is already engaged. To enter into company account, your staff access will be taken and a dummy profile would be built for the same.
+      <button class="btn btn-primary" id="close_me" type="button" data-toggle="collapse" data-target="#open_more" aria-expanded="false" aria-controls="collapseExample" onclick="close_me()">
+        Read More...
+      </button>
+      <div class="collapse" id="open_more">
+        Engaged mode will automatically turned off in some hours and until it on you will not able to access your account. Even if you try to logout and login, you can't access your account until the timer ends.
+      </div>
     </div>
     {% if request.user.is_authenticated and request.user.is_staff %} 
     {% if error %}

@@ -1523,18 +1523,18 @@ def company_change_mode(request,item):
     if error_detection(request,1)==False:
         try:
             user_profile=User.objects.get(id=int(item))
-            if user_profile.engaged:
-                return error(request,"Permission Denied.")
-            data=get_passed_profile(user_profile)
+            data=CompanyProfile.objects.get(original_user=user_profile)
             if data=={}:
-                return error(request,"Profile Not Found")
+                return JsonResponse({"error": "Profile Not Found"}, status=400)
+            if data.engaged:
+                return JsonResponse({"error": "Permission Denied."}, status=400)
         except:
-            return error(request,"Profile Not Found")
+            return JsonResponse({"error": "Profile Not Found"}, status=400)
         if user_profile.last_name!=settings.COMPANY_MESSAGE or user_profile.is_staff or user_profile.is_superuser:
-            return error(request,"Profile Not Found")
+            return JsonResponse({"error": "Profile Not Found"}, status=400)
         try:
             if user_profile!=CompanyProfile.objects.get(user=request.user).original_user:
-                return error(request,"Profile Not Found")
+                return JsonResponse({"error": "Profile Not Found"}, status=400)
             if data.let_staff_manage:
                 data.let_staff_manage=False
             else:

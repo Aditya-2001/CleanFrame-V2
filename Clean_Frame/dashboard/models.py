@@ -170,3 +170,22 @@ class Notification(models.Model):
     
     def __str__(self):
         return str(self.notification_sender) + '->' + str(self.notification_receiver)
+
+class ChatRequest(models.Model):
+    user=models.ForeignKey(User, on_delete=models.CASCADE, null=True, related_name="customer")
+    message=models.CharField(max_length=10000, null=True)
+    message_time=models.DateTimeField(default=datetime.datetime.now())
+    chat_ended=models.BooleanField(default=False)
+    engaged=models.BooleanField(default=False)
+    engaged_user=models.ForeignKey(User, on_delete=models.CASCADE, null=True, related_name="staff")
+    
+class ChatResponse(models.Model):
+    chat_request=models.ForeignKey(ChatRequest, on_delete=models.CASCADE, null=True)
+    responder=models.ForeignKey(User, on_delete=models.CASCADE, null=True)
+    username=models.CharField(max_length=10000, blank=True, null=True)
+    message=models.CharField(max_length=1000, null=True)
+    message_time=models.DateTimeField(default=datetime.datetime.now())
+    mess_time_str=models.CharField(max_length=10000, null=True)
+    read=models.BooleanField(default=False)
+    read_s=models.BooleanField(default=False)
+

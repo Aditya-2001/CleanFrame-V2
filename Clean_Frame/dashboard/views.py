@@ -2231,6 +2231,29 @@ def technical_support(request):
             return render(request,'dashboard1/technical_support.html',context={"support": support, "threads": threads, "permissions": get_permissions(request)})
     return error_detection(request,1)
 
+def all_chats(request):
+    if error_detection(request,1)==False:
+        if request.method=="POST":
+            chat=request.POST.get('chat')
+            ChatRequest.objects.create(user=request.user, message=chat)
+            return redirect('all_chats')
+        chat_requests=ChatRequest.objects.filter(user=request.user)
+        return render(request,"dashboard1/all_chats.html",context={"chats": chat_requests})
+    return error_detection(request,1)
+
+def visit_chat(request,item):
+    if error_detection(request,1)==False:
+        if request.method=="POST":
+            pass
+
+        chat_request=ChatRequest.objects.get(id=int(item))
+        if chat_request.user!=request.user:
+            return error(request,"Chat Request Not Found.")
+        profile=get_my_profile(request)
+        chat_response=ChatResponse.objects.filter(chat_request=chat_request)
+        return render(request,"dashboard1/visit_chat.html",context={"chat_request": chat_request, "chat_response": chat_response, "profile": profile})
+    return error_detection(request,1)
+
 def get_my_support_responses(request):
     threads=[]
     responses=TechnicalSupportRequest.objects.filter(user=request.user, continued_support=False).order_by('-date')

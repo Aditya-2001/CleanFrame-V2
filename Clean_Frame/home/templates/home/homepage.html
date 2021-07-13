@@ -25,6 +25,9 @@
 </head>
 
 <body oncontextmenu="return false;">
+    <!-- <body> -->
+
+    <!-- ----------------------------  Navigation ---------------------------------------------- -->
     <div id="progressbar"></div>
     <nav class="nav">
         <div class="nav-menu flex-row">
@@ -68,7 +71,15 @@
             </div>
         </div>
     </nav>
+
+    <!-- ------------x---------------  Navigation --------------------------x------------------- -->
+
+    <!----------------------------- Main Site Section ------------------------------>
+
     <main id="home">
+
+        <!------------------------ Site Title ---------------------->
+
         <section class="site-title">
             <div class="site-background" data-aos="fade-up" data-aos-delay="100">
                 <h1>Always remember, your focus determines your reality</h1>
@@ -81,6 +92,11 @@
                 <p style="color: white; " id="disappear">{{info}}</p>
             </div>
         </section>
+
+        <!------------x----------- Site Title ----------x----------->
+
+        <!-- --------------------- Blog Carousel ----------------- -->
+
         <section id="blogs">
             <div class="blog">
                 <div class="container">
@@ -129,10 +145,10 @@
             <div class="about-us" data-aos="fade-left" data-aos-delay="200">
                 <h2>Creators</h2>
                 <div class="flex-row">
-                    <a href="https://github.com/divy3011" style="text-decoration: none;" target="_blank"><h3 style="color: #686666da;">Divy Agrawal</h3></a>
+                    <a href="https://github.com/Aditya-2001" style="text-decoration: none;" target="_blank"><h3 style="color: #686666da;">Divy Agrawal</h3></a>
                 </div>
                 <div class="flex-row">
-                    <a href="https://github.com/Aditya-2001" style="text-decoration: none;" target="_blank"><h3 style="color: #686666da;">Aditya Aggarwal</h3></a>
+                    <a href="https://github.com/divy3011" style="text-decoration: none;" target="_blank"><h3 style="color: #686666da;">Aditya Aggarwal</h3></a>
                 </div>
                 <div class="flex-row">
                     <a href="https://github.com/Asinghkaushik" style="text-decoration: none;" target="_blank"><h3 style="color: #686666da;">Ambika Singh Kaushik</h3></a>
@@ -140,6 +156,11 @@
                 <div class="flex-row">
                     <a href="https://github.com/ABans1" style="text-decoration: none;" target="_blank"><h3 style="color: #686666da;">Anmol Bansal</h3></a>
                 </div>
+                <!-- <div class="flex-row">
+                    <img src="./assets/instagram/thumb-card6.png" alt="insta4">
+                    <img src="./assets/instagram/thumb-card7.png" alt="insta5">
+                    <img src="./assets/instagram/thumb-card8.png" alt="insta6">
+                </div> -->
             </div>
             <div class="follow" data-aos="fade-left" data-aos-delay="200">
                 <h2>Follow us</h2>
@@ -171,7 +192,19 @@
           </div>
         </div>
     </div>
+
+    <!-- -------------x------------- Footer --------------------x------------------- -->
+
+    <!-- Jquery Library file -->
+    <!-- <script src="{% static 'home/js/Jquery3.4.1.min.js' %}"></script> -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <!-- --------- Owl-Carousel js ------------------->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/owl.carousel.min.js"></script>
+    <!-- <script src="{% static 'home/js/owl.carousel.min.js' %}"></script> -->
+
+    <!-- ------------ AOS js Library  ------------------------- -->
+
+    <!-- Custom Javascript file -->
     <script src="{% static 'home/js/main.js' %}"></script>
     <script>
         function menuToggle() {

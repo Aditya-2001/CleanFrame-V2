@@ -71,6 +71,8 @@ urlpatterns = [
 
     path('chat_support/all/',all_chats,name="all_chats"),
     path('chat/visit/<str:item>',visit_chat,name="visit_chat"),
+    path('chat/send/<str:item>',send_chat,name="send_chat"),
+    path('chat/receive/<str:item>',receive_chat,name="receive_chat"),
 
     path('account/delete/',delete_account,name="delete_account"),
     path('search/users/',search_users,name="search_users"),

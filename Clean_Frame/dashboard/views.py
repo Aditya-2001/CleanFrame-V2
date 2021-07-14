@@ -1,4 +1,5 @@
 from django.http.response import JsonResponse
+from django.core import serializers
 from django.shortcuts import render,HttpResponse,redirect
 from django.contrib.auth.models import User
 from django.contrib import messages
@@ -2250,8 +2251,53 @@ def visit_chat(request,item):
         if chat_request.user!=request.user:
             return error(request,"Chat Request Not Found.")
         profile=get_my_profile(request)
-        chat_response=ChatResponse.objects.filter(chat_request=chat_request)
+        chat_response=ChatResponse.objects.filter(chat_request=chat_request, read=True)
         return render(request,"dashboard1/visit_chat.html",context={"chat_request": chat_request, "chat_response": chat_response, "profile": profile})
+    return error_detection(request,1)
+
+def send_chat(request,item):
+    if error_detection(request,1)==False:
+        if request.method=="POST":
+            pass
+        try:
+            chat_request=ChatRequest.objects.get(id=int(item))
+        except:
+            return JsonResponse({"error": "Chat not found."}, status=400)
+        if chat_request.user==request.user:
+            mess=datetime.datetime.now()
+            message=request.GET.get('chat_message')
+            mess=mess.strftime("%b")+" "+mess.strftime("%d")+", "+mess.strftime("%Y")+', '+mess.strftime("%I")+':'+mess.strftime("%M")+' '+mess.strftime("%p")
+            ChatResponse.objects.create(chat_request=chat_request, responder=request.user, 
+                                            username=request.user.username, read=True,
+                                            mess_time_str=mess, message=message)
+            return JsonResponse({"success": "Chat sent."}, status=200)
+        else:
+            pass
+            #MAY BE CODE GOES FOR STAFF
+
+            return JsonResponse({"error": "Chat not found."}, status=400)
+    return error_detection(request,1)
+
+def receive_chat(request,item):
+    if error_detection(request,1)==False:
+        if request.method=="POST":
+            pass
+        try:
+            chat_request=ChatRequest.objects.get(id=int(item))
+        except:
+            return JsonResponse({"error": "Chat not found."}, status=400)
+        if chat_request.user==request.user:
+            response=ChatResponse.objects.filter(chat_request=chat_request, read=False)
+            for each in response:
+                each.read=True
+                each.save()
+            data=serializers.serialize('json', response)
+            return JsonResponse({"success": "message received..", "data": data}, status=200) 
+        else:
+            pass
+            #MAY BE CODE GOES FOR STAFF
+
+            return JsonResponse({"error": "Chat not found."}, status=400)
     return error_detection(request,1)
 
 def get_my_support_responses(request):

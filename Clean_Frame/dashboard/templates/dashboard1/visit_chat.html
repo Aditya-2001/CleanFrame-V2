@@ -158,79 +158,80 @@
 
 <main>
 
-<div class="container content">
+<div class="container">
     <div class="row">
         <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12">
         	<div class="card">
-        		<div class="card-header" style="background-color: black !important;">Chat Request ID # {{chat_request.id}}</div>
-        		<div class="card-body height3">
-        			<ul class="chat-list">
-                        <li class="out">
+        		<div class="card-header" style="background-color: black !important;">Chat Request ID # {{chat_request.id}}
+            <span style="float: right" id="total_new_messages">0</span>
+            </div>
+        		<div class="card-body height3 scrollbar scrollbar-danger" id="scroller">
+        			<ul class="chat-list" id="all_chatss">
+                {% comment %} Request {% endcomment %}
+                <li class="out">
         					<div class="chat-img">
         						<img src="{{profile.image.url}}" alt="{% static 'img/us_ma.png' %}">
         					</div>
         					<div class="chat-body">
         						<div class="chat-message">
-        							<h5>{{chat_request.user.username}}</h5>
+        							<h5>{{chat_request.user.username}} - {{chat_request.message_time}}</h5>
         							<p>{{chat_request.message}}</p>
         						</div>
         					</div>
         				</li>
-
-        				<li class="in">
-        					<div class="chat-img">
-        						<img alt="Avtar" src="https://bootdey.com/img/Content/avatar/avatar1.png">
-        					</div>
-        					<div class="chat-body">
-        						<div class="chat-message">
-        							<h5>Jimmy Willams</h5>
-        							<p>Raw denim heard of them tofu master cleanse</p>
-        						</div>
-        					</div>
-        				</li>
-                        
-        				<li class="out">
-        					<div class="chat-img">
-        						<img alt="Avtar" src="https://bootdey.com/img/Content/avatar/avatar6.png">
-        					</div>
-        					<div class="chat-body">
-        						<div class="chat-message">
-        							<h5>Serena</h5>
-        							<p>Next level veardveardveardveardveardveardveardveardveardveardveardveardveardveardveardveard  </p>
-        						</div>
-        					</div>
-        				</li>
-        				<li class="in">
-        					<div class="chat-img">
-        						<img alt="Avtar" src="https://bootdey.com/img/Content/avatar/avatar1.png">
-        					</div>
-        					<div class="chat-body">
-        						<div class="chat-message">
-        							<h5 class="name">Jimmy Willams</h5>
-        							<p>Will stumptown scenes coffee viral.</p>
-        						</div>
-        					</div>
-        				</li>
-        				<li class="out">
-        					<div class="chat-img">
-        						<img alt="Avtar" src="https://bootdey.com/img/Content/avatar/avatar6.png">
-        					</div>
-        					<div class="chat-body">
-        						<div class="chat-message">
-        							<h5>Serena</h5>
-        							<p>Tofu master best deal</p>
-        						</div>
-        					</div>
-        				</li>
+                {% comment %} Request {% endcomment %}
+        				
+                {% for each in chat_response %}
+                  {% ifequal request.user each.responder %}
+                  <li class="out">
+                    <div class="chat-img">
+                      <img src="{{profile.image.url}}" alt="{% static 'img/us_ma.png' %}">
+                    </div>
+                    <div class="chat-body">
+                      <div class="chat-message">
+                        <h5>{{request.user.username}} - {{each.message_time}}</h5>
+                        <p>{{each.message}}</p>
+                      </div>
+                    </div>
+                  </li>
+                  {% else %}
+                  <li class="in">
+                    <div class="chat-img">
+                      <img src="{% static 'img/staff.png' %}" alt="{% static 'img/us_ma.png' %}">
+                    </div>
+                    <div class="chat-body">
+                      <div class="chat-message">
+                        <h5>{{each.responder.username}} - {{each.message_time}}</h5>
+                        <p>{{each.message}}</p>
+                      </div>
+                    </div>
+                  </li>
+                  {% endifequal %}
+                {% endfor %}
         			</ul>
         		</div>
+              <div class="textarea-container">
+                <textarea class="form-control form-inline card-footer" id="chat_message" placeholder="Enter your message...." name="chat" rows=1 style="resize:none;"></textarea>
+                <i class="fas fa-arrow-circle-up" onclick="send_message()"></i>
+              </div>
         	</div>
         </div>
     </div>
 </div>
 
+<div style="display: none">
+  <p id="user_name">{{request.user.username}}</p>
+  {% if profile.image %}
+    <p id="pr_image" style="display: none">{{profile.image}}</p>
+  {% else %}
+    <p id="pr_image" style="display: none">0</p>
+  {% endif %}
+  <p id="chat_re_id">{{chat_request.id}}</p>
+</div>
+
 </main>
 
-
-{% comment %} <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous"> {% endcomment %}
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery.perfect-scrollbar/0.6.7/js/min/perfect-scrollbar.jquery.min.js"></script>
+<script type="text/javascript" src="{% static 'ajax/chat.js' %}"></script>
 {% endblock %}

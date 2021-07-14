@@ -116,6 +116,7 @@ function formatAMPM(date) {
 
 
 function get_new_messages(){
+    if(chat_receiving==0)   return false;
     chat_re_id=document.getElementById("chat_re_id").innerHTML
     $.ajax({
         type: 'GET',

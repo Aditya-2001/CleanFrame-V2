@@ -2234,6 +2234,8 @@ def technical_support(request):
 
 def all_chats(request):
     if error_detection(request,1)==False:
+        if request.user.is_staff:
+            return error(request, "Permission Denied")
         if request.method=="POST":
             chat=request.POST.get('chat')
             ChatRequest.objects.create(user=request.user, message=chat)
@@ -2264,6 +2266,8 @@ def visit_chat(request,item):
             except:
                 StaffPermissions.objects.create(user=request.user)
                 return redirect('dashboard')
+            if chat_request.engaged and chat_request.engaged_user!=request.user:
+                return error(request,"Chat is already engaged")
             profile=get_the_profile(chat_request.user)
             chat_response=ChatResponse.objects.filter(chat_request=chat_request, read_s=True)
             return render(request,"dashboard1/visit_chat_staff.html",context={"chat_request": chat_request, "chat_response": chat_response, "permissions": get_permissions(request), "profile": profile})
@@ -2297,6 +2301,8 @@ def send_chat(request,item):
             except:
                 StaffPermissions.objects.create(user=request.user)
                 return JsonResponse({"error": "Chat not found."}, status=400)
+            if chat_request.engaged and chat_request.engaged_user!=request.user:
+                return error(request,"Chat is already engaged")
             mess=datetime.datetime.now()
             message=request.GET.get('chat_message')
             mess=mess.strftime("%b")+" "+mess.strftime("%d")+", "+mess.strftime("%Y")+', '+mess.strftime("%I")+':'+mess.strftime("%M")+' '+mess.strftime("%p")
@@ -2314,6 +2320,8 @@ def receive_chat(request,item):
             chat_request=ChatRequest.objects.get(id=int(item))
         except:
             return JsonResponse({"error": "Chat not found."}, status=400)
+        if chat_request.chat_ended:
+            return JsonResponse({"error": "Chat has been ended."}, status=400)
         if chat_request.user==request.user:
             response=ChatResponse.objects.filter(chat_request=chat_request, read=False)
             for each in response:
@@ -2331,6 +2339,8 @@ def receive_chat(request,item):
             except:
                 StaffPermissions.objects.create(user=request.user)
                 return JsonResponse({"error": "Chat not found."}, status=400)
+            if chat_request.engaged and chat_request.engaged_user!=request.user:
+                return error(request,"Chat is already engaged")
             response=ChatResponse.objects.filter(chat_request=chat_request, read_s=False)
             for each in response:
                 each.read_s=True
@@ -2361,10 +2371,42 @@ def end_chat(request,item):
             except:
                 StaffPermissions.objects.create(user=request.user)
                 return JsonResponse({"error": "Chat not found."}, status=400)
+            if chat_request.engaged and chat_request.engaged_user!=request.user:
+                return error(request,"Chat is already engaged")
             chat_request.chat_ended=True
             chat_request.save()
             return JsonResponse({"success": "message received.."}, status=200) 
     return error_detection(request,1)
+
+def change_chat_mode(request,item):
+    if error_detection(request,1)==False:
+        if request.method=="POST":
+            pass
+        try:
+            chat_request=ChatRequest.objects.get(id=int(item))
+        except:
+            return JsonResponse({"error": "Chat not found."}, status=400)
+        if chat_request.user==request.user:
+            return JsonResponse({"error": "Permission Denied.."}, status=400) 
+        else:
+            if request.user.is_staff==False and request.user.is_superuser==False:
+                return JsonResponse({"error": "Chat not found."}, status=400)
+            try:
+                permissions=StaffPermissions.objects.get(user=request.user)
+                if permissions.can_manage_technical_support==False:
+                    return JsonResponse({"error": "Chat not found."}, status=400)
+            except:
+                StaffPermissions.objects.create(user=request.user)
+                return JsonResponse({"error": "Chat not found."}, status=400)
+            if chat_request.engaged:
+                chat_request.engaged=False
+            else:
+                chat_request.engaged=True
+                chat_request.engaged_user=request.user
+            chat_request.save()
+            return JsonResponse({"success": "Mode Changed Successfully.."}, status=200)
+    return error_detection(request,1)
+
 
 def technical_support_assist(request):
     if error_detection(request,1)==False:

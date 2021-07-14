@@ -17,6 +17,7 @@ function send_message(){
         },
         error: function (response) {
             alert(response["responseJSON"]["error"]);
+            location.reload()
         }
     })
 
@@ -112,11 +113,7 @@ function formatAMPM(date) {
     return strTime;
   }
 
-window.setInterval(function() {
-    if(chat_receiving){
-        get_new_messages();
-    }
-  }, 500);
+
 
 function get_new_messages(){
     chat_re_id=document.getElementById("chat_re_id").innerHTML
@@ -137,6 +134,7 @@ function get_new_messages(){
         },
         error: function (response) {
             alert(response["responseJSON"]["error"]);
+            location.reload()
         }
     })
 }
@@ -148,6 +146,11 @@ function scroll_down(){
 
 scroll_down()
 chat_receiving=document.getElementById('chat_receiver').innerHTML
+if(chat_receiving!=0){
+    window.setInterval(function() {
+            get_new_messages();
+    }, 1000);
+}
 
 function end_chat(){
     chat_re_id=document.getElementById("chat_re_id").innerHTML
@@ -160,6 +163,7 @@ function end_chat(){
         },
         error: function (response) {
             alert(response["responseJSON"]["error"]);
+            location.reload()
         }
     })
 }

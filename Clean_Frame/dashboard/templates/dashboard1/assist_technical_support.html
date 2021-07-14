@@ -209,6 +209,8 @@
                                         {% if each.engaged %}
                                           {% ifequal each.engaged_user request.user %} 
                                             <a href="{% url 'visit_chat' item=each.id %}" class="link_to_button_blue">Visit</a>
+                                          {% else %}
+                                            -
                                           {% endifequal %}
                                         {% else %}
                                           <a href="{% url 'visit_chat' item=each.id %}" class="link_to_button_blue">Visit</a>

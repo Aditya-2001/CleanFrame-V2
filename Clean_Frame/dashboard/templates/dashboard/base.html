@@ -80,9 +80,11 @@
                             <li>
                                 <a href="{% url 'notifications' %}"><img src="{% static 'dashboard/img/notification.png' %}" alt=""> Notification</a>
                             </li>
+                            {% if request.user.is_staff %}{% else %}
                             <li>
                                 <a href="{% url 'all_chats' %}"><img src="{% static 'dashboard/img/support.png' %}" alt=""> Support</a>
                             </li>
+                            {% endif %}
                             <li>
                                 <a href="{% url 'change_password' %}"><img src="{% static 'dashboard/img/key.png' %}" alt=""> Password</a>
                             </li>

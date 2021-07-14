@@ -162,11 +162,28 @@
     <div class="row">
         <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12">
         	<div class="card">
-        		<div class="card-header" style="background-color: black !important;">
+                <div class="card-header" style="background-color: black !important;">
+                {% if chat_request.engaged%}
+                Note: Turn off Engaged Mode when you leave the chat.
+                {% else %}
+        		Note: Turn on Engaged Mode while chatting.
+                {% endif %}
+                </div>
+                <div class="card-header" style="background-color: black !important;">
             {% if chat_request.chat_ended %}
             ISSUE RESOLVED
             {% else %}
             <span style="float: left" id="total_new_messages">0 New Messages</span>
+            <span>
+                <label class="switch" style="margin-top: 10px">
+                    {% if chat_request.engaged %}
+                        <input type="checkbox" onchange="change_my_mode()" checked>
+                    {% else %}
+                        <input type="checkbox" onchange="change_my_mode()">
+                    {% endif %}
+                    <span class="slider"></span>
+                </label>
+            </span>
             <span style="float:right" onclick="end_chat()">End Chat</span>
             {% endif %}
             </div>
@@ -202,7 +219,11 @@
                   {% else %}
                   <li class="in">
                     <div class="chat-img">
-                      <img src="{{profile.image.url}}" alt="{% static 'img/us_ma.png' %}">
+                        {% if each.responder.is_staff %}
+                            <img src="{% static 'img/staff.png' %}" alt="{% static 'img/us_ma.png' %}">
+                        {% else %}
+                            <img src="{{profile.image.url}}" alt="{% static 'img/us_ma.png' %}">
+                        {% endif %}
                     </div>
                     <div class="chat-body">
                       <div class="chat-message">

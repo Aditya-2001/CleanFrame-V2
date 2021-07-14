@@ -2246,13 +2246,27 @@ def visit_chat(request,item):
     if error_detection(request,1)==False:
         if request.method=="POST":
             pass
-
-        chat_request=ChatRequest.objects.get(id=int(item))
-        if chat_request.user!=request.user:
-            return error(request,"Chat Request Not Found.")
-        profile=get_my_profile(request)
-        chat_response=ChatResponse.objects.filter(chat_request=chat_request, read=True)
-        return render(request,"dashboard1/visit_chat.html",context={"chat_request": chat_request, "chat_response": chat_response, "profile": profile})
+        try:
+            chat_request=ChatRequest.objects.get(id=int(item))
+        except:
+            return JsonResponse({"error": "Chat not found."}, status=400)
+        if chat_request.user==request.user:
+            profile=get_my_profile(request)
+            chat_response=ChatResponse.objects.filter(chat_request=chat_request, read=True)
+            return render(request,"dashboard1/visit_chat.html",context={"chat_request": chat_request, "chat_response": chat_response, "profile": profile})
+        else:
+            if request.user.is_staff==False and request.user.is_superuser==False:
+                return redirect('home')
+            try:
+                permissions=StaffPermissions.objects.get(user=request.user)
+                if permissions.can_manage_technical_support==False:
+                    return error(request,"You don't have permission to access this page")
+            except:
+                StaffPermissions.objects.create(user=request.user)
+                return redirect('dashboard')
+            profile=get_the_profile(chat_request.user)
+            chat_response=ChatResponse.objects.filter(chat_request=chat_request, read_s=True)
+            return render(request,"dashboard1/visit_chat_staff.html",context={"chat_request": chat_request, "chat_response": chat_response, "permissions": get_permissions(request), "profile": profile})
     return error_detection(request,1)
 
 def send_chat(request,item):
@@ -2263,6 +2277,8 @@ def send_chat(request,item):
             chat_request=ChatRequest.objects.get(id=int(item))
         except:
             return JsonResponse({"error": "Chat not found."}, status=400)
+        if chat_request.chat_ended:
+            return JsonResponse({"error": "Chat has been ended."}, status=400)
         if chat_request.user==request.user:
             mess=datetime.datetime.now()
             message=request.GET.get('chat_message')
@@ -2272,10 +2288,22 @@ def send_chat(request,item):
                                             mess_time_str=mess, message=message)
             return JsonResponse({"success": "Chat sent."}, status=200)
         else:
-            pass
-            #MAY BE CODE GOES FOR STAFF
-
-            return JsonResponse({"error": "Chat not found."}, status=400)
+            if request.user.is_staff==False and request.user.is_superuser==False:
+                return JsonResponse({"error": "Chat not found."}, status=400)
+            try:
+                permissions=StaffPermissions.objects.get(user=request.user)
+                if permissions.can_manage_technical_support==False:
+                    return JsonResponse({"error": "Chat not found."}, status=400)
+            except:
+                StaffPermissions.objects.create(user=request.user)
+                return JsonResponse({"error": "Chat not found."}, status=400)
+            mess=datetime.datetime.now()
+            message=request.GET.get('chat_message')
+            mess=mess.strftime("%b")+" "+mess.strftime("%d")+", "+mess.strftime("%Y")+', '+mess.strftime("%I")+':'+mess.strftime("%M")+' '+mess.strftime("%p")
+            ChatResponse.objects.create(chat_request=chat_request, responder=request.user, 
+                                            username=request.user.username, read_s=True,
+                                            mess_time_str=mess, message=message)
+            return JsonResponse({"success": "Chat sent."}, status=200)
     return error_detection(request,1)
 
 def receive_chat(request,item):
@@ -2294,20 +2322,49 @@ def receive_chat(request,item):
             data=serializers.serialize('json', response)
             return JsonResponse({"success": "message received..", "data": data}, status=200) 
         else:
-            pass
-            #MAY BE CODE GOES FOR STAFF
-
-            return JsonResponse({"error": "Chat not found."}, status=400)
+            if request.user.is_staff==False and request.user.is_superuser==False:
+                return JsonResponse({"error": "Chat not found."}, status=400)
+            try:
+                permissions=StaffPermissions.objects.get(user=request.user)
+                if permissions.can_manage_technical_support==False:
+                    return JsonResponse({"error": "Chat not found."}, status=400)
+            except:
+                StaffPermissions.objects.create(user=request.user)
+                return JsonResponse({"error": "Chat not found."}, status=400)
+            response=ChatResponse.objects.filter(chat_request=chat_request, read_s=False)
+            for each in response:
+                each.read_s=True
+                each.save()
+            data=serializers.serialize('json', response)
+            return JsonResponse({"success": "message received..", "data": data}, status=200) 
     return error_detection(request,1)
 
-def get_my_support_responses(request):
-    threads=[]
-    responses=TechnicalSupportRequest.objects.filter(user=request.user, continued_support=False).order_by('-date')
-    for each in responses:
-        thread_responses=TechnicalSupportRequest.objects.filter(continued_support=True, main_support_id=each.id).order_by('date')
-        threads.append(thread_responses)
-    return [responses, threads]
-
+def end_chat(request,item):
+    if error_detection(request,1)==False:
+        if request.method=="POST":
+            pass
+        try:
+            chat_request=ChatRequest.objects.get(id=int(item))
+        except:
+            return JsonResponse({"error": "Chat not found."}, status=400)
+        if chat_request.user==request.user:
+            chat_request.chat_ended=True
+            chat_request.save()
+            return JsonResponse({"success": "message received.."}, status=200) 
+        else:
+            if request.user.is_staff==False and request.user.is_superuser==False:
+                return JsonResponse({"error": "Chat not found."}, status=400)
+            try:
+                permissions=StaffPermissions.objects.get(user=request.user)
+                if permissions.can_manage_technical_support==False:
+                    return JsonResponse({"error": "Chat not found."}, status=400)
+            except:
+                StaffPermissions.objects.create(user=request.user)
+                return JsonResponse({"error": "Chat not found."}, status=400)
+            chat_request.chat_ended=True
+            chat_request.save()
+            return JsonResponse({"success": "message received.."}, status=200) 
+    return error_detection(request,1)
 
 def technical_support_assist(request):
     if error_detection(request,1)==False:
@@ -2321,22 +2378,24 @@ def technical_support_assist(request):
             StaffPermissions.objects.create(user=request.user)
             return redirect('dashboard')
         if request.method=="POST":
-            message=request.POST.get('message')
-            support_id=int(request.POST.get('support_id'))
-            try:
-                first_support=TechnicalSupportRequest.objects.get(id=int(support_id))
-            except:
-                return error(request,"Can't Reply on it")
-            if first_support.continued_support==True:
-                return error(request,"Support details not found")
-            TechnicalSupportRequest.objects.create(user=request.user, continued_support=True, main_support_id=support_id, message=message)
-            return redirect('respond_support',support_id)
+            pass
         else:
-            support=TechnicalSupportRequest.objects.filter(continued_support=False).order_by('-date')
+            support=ChatRequest.objects.all().exclude(user=request.user)
             if support.count()==0:
                 support="0"
             return render(request,'dashboard1/assist_technical_support.html',context={"support": support, "permissions": permissions})
     return error_detection(request,1)
+
+def get_my_support_responses(request):
+    threads=[]
+    responses=TechnicalSupportRequest.objects.filter(user=request.user, continued_support=False).order_by('-date')
+    for each in responses:
+        thread_responses=TechnicalSupportRequest.objects.filter(continued_support=True, main_support_id=each.id).order_by('date')
+        threads.append(thread_responses)
+    return [responses, threads]
+
+
+
 
 def respond_support(request,item):
     if error_detection(request,1)==False:

@@ -30,28 +30,46 @@ function add_message_mine(message){
     username=document.getElementById("user_name").innerHTML
     time1=new Date()
     time=get_month(time1.getMonth())+" "+time1.getDate()+", "+time1.getFullYear()+", "+formatAMPM(time1)
+    url="/static/img/staff.png"
+    message=`
+        <li class="out">
+            <div class="chat-img">
+                <img src="`+ url +`" alt="{% static 'img/us_ma.png' %}">
+            </div>
+            <div class="chat-body">
+                <div class="chat-message">
+                    <h5>`+username+` - `+time+`</h5>
+                    <p>`+message+`</p>
+                </div>
+            </div>
+        </li>
+    `
+    return message
+}
+
+function add_message_user(message, username, time){
     image=document.getElementById("pr_image").innerHTML
     if(image==0){
         url="/static/img/us_ma.png"
         message=`
-            <li class="out">
-                <div class="chat-img">
-                    <img src="`+ url +`" alt="{% static 'img/us_ma.png' %}">
-                </div>
-                <div class="chat-body">
-                    <div class="chat-message">
-                        <h5>`+username+` - `+time+`</h5>
-                        <p>`+message+`</p>
+                <li class="in new_chat">
+                    <div class="chat-img">
+                        <img src="`+url+`">
                     </div>
-                </div>
-            </li>
+                    <div class="chat-body">
+                        <div class="chat-message">
+                            <h5>`+username+` - `+time+`</h5>
+                            <p>`+message+`</p>
+                        </div>
+                    </div>
+                </li>
         `
     }
     else{
         base_url="/media/"
         next_url=image
         message=`
-                    <li class="out">
+                    <li class="in new_chat">
         				<div class="chat-img">
         					<img src="`+ base_url+next_url +`" alt="{% static 'img/us_ma.png' %}">
         				</div>
@@ -64,24 +82,6 @@ function add_message_mine(message){
         			</li>
         `
     }
-    return message
-}
-
-function add_message_staff(message, username, time){
-    url="/static/img/staff.png"
-    message=`
-                    <li class="in new_chat">
-        				<div class="chat-img">
-        					<img src="`+url+`">
-        				</div>
-    					<div class="chat-body">
-    						<div class="chat-message">
-        						<h5>`+username+` - `+time+`</h5>
-        						<p>`+message+`</p>
-        					</div>
-        				</div>
-        			</li>
-        `
     return message
 }
 
@@ -116,7 +116,7 @@ window.setInterval(function() {
     if(chat_receiving){
         get_new_messages();
     }
-  }, 500);
+  }, 1000);
 
 function get_new_messages(){
     chat_re_id=document.getElementById("chat_re_id").innerHTML
@@ -131,7 +131,7 @@ function get_new_messages(){
                 total_new_messages+=n
                 document.getElementById("total_new_messages").innerHTML=total_new_messages+" New Messages"
                 for(var i=0;i<n;i++){
-                    $("#all_chatss").append(add_message_staff(data[i].fields.message, data[i].fields.username, data[i].fields.mess_time_str))
+                    $("#all_chatss").append(add_message_user(data[i].fields.message, data[i].fields.username, data[i].fields.mess_time_str))
                 }
             }
         },

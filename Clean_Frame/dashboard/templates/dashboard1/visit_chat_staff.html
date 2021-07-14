@@ -4,6 +4,7 @@
 {% block title %}
 <title>Dashboard {{request.user.email}}</title>
 <link rel="icon" href="{% static 'img/logo.png' %}" type="image/x-icon">
+<link rel="stylesheet" href="{% static 'css/chat.css' %}">
 {% endblock %}
 
 <!--Make the class active for the link you want-->
@@ -93,7 +94,7 @@
           {% endif %} 
           {% if permissions.can_manage_technical_support %}
           <li>
-              <a href="{% url 'technical_support_assist' %}" class=""><span class="lar la-comment-alt"></span>
+              <a href="{% url 'technical_support_assist' %}" class="active"><span class="lar la-comment-alt"></span>
               <span>Manage Support </span>
             </a>
           </li>
@@ -147,86 +148,101 @@
 
 <!--For the text at the top of panel 2-->
 {% block dashboard_title %}
-<a href="{% url 'dashboard' %}" style="text-decoration: none; color: black;">Chat Support</a> {% endblock %}
+<a href="{% url 'dashboard' %}" style="text-decoration: none; color: black;">Chat Request ID # {{chat_request.id}}</a> {% endblock %}
 
 <!--For the user details displayed at the top right-->
 
 
 <!--For the main section : 3-->
 {% block section_main %}
+
 <main>
-    <div class="recent-grid1">
-        <div class="projects">
-            <div class="card">
-                <div class="card-header">
-                    <h3 style="margin-left: 13%;">All Chat Requests</h3>
-                    <button type="button" style="width: 170px; text-align: center;" data-toggle="modal" data-target="#NewChat">New Chat</button>
-                </div>
-                <div class="card-body">
-                    <div class="table-responsive container">
-                           
-                        <table id="myTable" class="display nowrap" style="width: 100%">
-                        
-                            <thead id="thead">
-                                <tr id="tr1" style="text-align: center;">
-                                    <td># Chat ID</td>
-                                    <td id="td">Request Chat</td>
-                                    <td id="td1">Request Time</td>
-                                    <td>Issue Resolved</td>
-                                    <td id="td2">Visit</td>
-                                </tr>
-                            </thead>
-                            
-                            <tbody>
-                                {% for each in chats %}
-                                <tr id="tr1" style="text-align: center;">
-                                    <td>{{each.id}}</td>
-                                    <td style="max-width: 50px;text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">{{each.message}}</td>
-                                    <td>{{each.message_time}}</td>
-                                    <td>
-                                        {% if each.chat_ended %}
-                                            Yes
-                                        {% else %}
-                                            No
-                                        {% endif %}
-                                    </td>
-                                    <td>
-                                        {% if each.chat_ended %} <a href="{% url 'visit_chat' item=each.id %}">See Chats</a> {% else %}
-                                        <a href="{% url 'visit_chat' item=each.id %}">Visit</a>
-                                        {% endif %}
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                        </div>
-                    </div>
-                </div>
+
+<div class="container">
+    <div class="row">
+        <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12">
+        	<div class="card">
+        		<div class="card-header" style="background-color: black !important;">
+            {% if chat_request.chat_ended %}
+            ISSUE RESOLVED
+            {% else %}
+            <span style="float: left" id="total_new_messages">0 New Messages</span>
+            <span style="float:right" onclick="end_chat()">End Chat</span>
+            {% endif %}
             </div>
+        		<div class="card-body height3 scrollbar scrollbar-danger" id="scroller">
+        			<ul class="chat-list" id="all_chatss">
+                {% comment %} Request {% endcomment %}
+                <li class="in">
+        					<div class="chat-img">
+        						<img src="{{profile.image.url}}" alt="{% static 'img/us_ma.png' %}">
+        					</div>
+        					<div class="chat-body">
+        						<div class="chat-message">
+        							<h5>{{chat_request.user.username}} - {{chat_request.message_time}}</h5>
+        							<p>{{chat_request.message}}</p>
+        						</div>
+        					</div>
+        				</li>
+                {% comment %} Request {% endcomment %}
+        				
+                {% for each in chat_response %}
+                  {% ifequal request.user each.responder %}
+                  <li class="out">
+                    <div class="chat-img">
+                      <img src="{% static 'img/staff.png' %}" alt="{% static 'img/us_ma.png' %}">
+                    </div>
+                    <div class="chat-body">
+                      <div class="chat-message">
+                        <h5>{{request.user.username}} - {{each.message_time}}</h5>
+                        <p>{{each.message}}</p>
+                      </div>
+                    </div>
+                  </li>
+                  {% else %}
+                  <li class="in">
+                    <div class="chat-img">
+                      <img src="{{profile.image.url}}" alt="{% static 'img/us_ma.png' %}">
+                    </div>
+                    <div class="chat-body">
+                      <div class="chat-message">
+                        <h5>{{each.responder.username}} - {{each.message_time}}</h5>
+                        <p>{{each.message}}</p>
+                      </div>
+                    </div>
+                  </li>
+                  {% endifequal %}
+                {% endfor %}
+        			</ul>
+        		</div>
+              <div class="textarea-container">
+                {% if chat_request.chat_ended %}
+                <p style="display: none" id="chat_receiver">0</p>
+                <textarea class="form-control form-inline card-footer" id="chat_message" placeholder="No More Chats can be sent now.." name="chat" rows=1 style="resize:none;"></textarea>
+                {% else %}
+                <textarea class="form-control form-inline card-footer" id="chat_message" placeholder="Enter your message...." name="chat" rows=1 style="resize:none;"></textarea>
+                <i class="fas fa-arrow-circle-up" onclick="send_message()"></i>
+                <p style="display: none" id="chat_receiver">1</p>
+                {% endif %}
+              </div>
+        	</div>
         </div>
+    </div>
+</div>
+
+<div style="display: none">
+  <p id="user_name">{{request.user.username}}</p>
+  {% if profile.image %}
+    <p id="pr_image" style="display: none">{{profile.image}}</p>
+  {% else %}
+    <p id="pr_image" style="display: none">0</p>
+  {% endif %}
+  <p id="chat_re_id">{{chat_request.id}}</p>
+</div>
+
 </main>
 
-<!-- Modal -->
-<div class="modal fade" id="NewChat" tabindex="-1" role="dialog" aria-labelledby="NewChatLabel" aria-hidden="true">
-  <div class="modal-dialog" role="document">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="NewChatLabel">New Support Message</h5>
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-          <span aria-hidden="true">&times;</span>
-        </button>
-      </div>
-      <form action="?" method="POST" enctype="multipart/form-data">
-      <div class="modal-body">
-            {% csrf_token %}
-            <textarea name="chat"class="form-control" required></textarea>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-        <button type="submit" class="btn btn-primary">Send Message</button>
-      </div>
-      </form>
-    </div>
-  </div>
-</div>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery.perfect-scrollbar/0.6.7/js/min/perfect-scrollbar.jquery.min.js"></script>
+<script type="text/javascript" src="{% static 'ajax/chat_staff.js' %}"></script>
 {% endblock %}

@@ -159,7 +159,7 @@
         <div class="projects">
             <div class="card">
                 <div class="card-header">
-                    <h3 style="margin-left: 13%;">Main Threads</h3>
+                    <h3 style="margin-left: 13%;">Chat Requests</h3>
                     <h6 id="time_error1" style="text-align: center; padding-bottom: 5px; color: red">{{error}}</h6>
                     <button type="button" onclick="toexcel('#myTable')" style="width: 170px; text-align: center;">Export to excel</button>
 
@@ -175,13 +175,15 @@
                   <span class="las la-search"></span>
                   <input type="search" aria-controls="myTable" placeholder="Search User">
                 </div> -->
-                        <table id="myTable">
+                        <table id="myTable" class="display nowrap" style="width: 100%">
                             <thead id="thead">
                                 <tr id="tr1" style="text-align: center;">
-                                    <td>Support ID</td>
+                                    <td>Chat #ID</td>
                                     <td id="td1">User</td>
-                                    <td id="td2">Help Message</td>
-                                    <td>Message Date</td>
+                                    <td id="td2">Request Chat</td>
+                                    <td>Request Time</td>
+                                    <td>Issue Resolved</td>
+                                    <td>Engaged</td>
                                     <td>#</td>
                                 </tr>
                             </thead>
@@ -190,10 +192,29 @@
                                 {% ifnotequal support '0' %}
                                 <tr style="text-align: center;">
                                     <td>{{each.id}}</td>
-                                    <td>{{each.user}}</td>
+                                    <td>{{each.user.username}}</td>
                                     <td style="max-width: 40px;text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">{{each.message}}</td>
-                                    <td>{{each.date}}</td>
-                                    <td style="text-align: center;"><a href="{% url 'respond_support' item=each.id %}" class="link_to_button_blue">Reply or Review?</a></td>
+                                    <td>{{each.message_time}}</td>
+                                    {% if each.chat_ended %}
+                                      <td>YES</td>
+                                      <td>-</td>
+                                    {% else %}
+                                      <td>NO</td>
+                                      <td> {% if each.engaged %}YES{% else %}NO{% endif %}</td>
+                                    {% endif %}
+                                    <td>
+                                      {% if each.chat_ended %}
+                                        <a href="{% url 'visit_chat' item=each.id %}" class="link_to_button_red">Read Chats</a>
+                                      {% else %}
+                                        {% if each.engaged %}
+                                          {% ifequal each.engaged_user request.user %} 
+                                            <a href="{% url 'visit_chat' item=each.id %}" class="link_to_button_blue">Visit</a>
+                                          {% endifequal %}
+                                        {% else %}
+                                          <a href="{% url 'visit_chat' item=each.id %}" class="link_to_button_blue">Visit</a>
+                                        {% endif %}
+                                      {% endif %}
+                                    </td>
                                 </tr>
                                 {% endifnotequal %}
                                 {% endfor %}

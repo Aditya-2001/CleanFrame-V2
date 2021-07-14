@@ -148,7 +148,7 @@
 
 <!--For the text at the top of panel 2-->
 {% block dashboard_title %}
-<a href="{% url 'dashboard' %}" style="text-decoration: none; color: black;">Chat Support</a> {% endblock %}
+<a href="{% url 'dashboard' %}" style="text-decoration: none; color: black;">Chat Request ID # {{chat_request.id}}</a> {% endblock %}
 
 <!--For the user details displayed at the top right-->
 
@@ -162,8 +162,13 @@
     <div class="row">
         <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12">
         	<div class="card">
-        		<div class="card-header" style="background-color: black !important;">Chat Request ID # {{chat_request.id}}
-            <span style="float: right" id="total_new_messages">0</span>
+        		<div class="card-header" style="background-color: black !important;">
+            {% if chat_request.chat_ended %}
+            ISSUE RESOLVED
+            {% else %}
+            <span style="float: left" id="total_new_messages">0 New Messages</span>
+            <span style="float:right" onclick="end_chat()">End Chat</span>
+            {% endif %}
             </div>
         		<div class="card-body height3 scrollbar scrollbar-danger" id="scroller">
         			<ul class="chat-list" id="all_chatss">
@@ -211,8 +216,14 @@
         			</ul>
         		</div>
               <div class="textarea-container">
+                {% if chat_request.chat_ended %}
+                <p style="display: none" id="chat_receiver">0</p>
+                <textarea class="form-control form-inline card-footer" id="chat_message" placeholder="No More Chats can be sent now.." name="chat" rows=1 style="resize:none;"></textarea>
+                {% else %}
                 <textarea class="form-control form-inline card-footer" id="chat_message" placeholder="Enter your message...." name="chat" rows=1 style="resize:none;"></textarea>
                 <i class="fas fa-arrow-circle-up" onclick="send_message()"></i>
+                <p style="display: none" id="chat_receiver">1</p>
+                {% endif %}
               </div>
         	</div>
         </div>

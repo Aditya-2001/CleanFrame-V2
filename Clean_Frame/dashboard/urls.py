@@ -64,12 +64,6 @@ urlpatterns = [
     path('notifications/float/',give_notifications,name="give_notifications"),
     path('notifications/my/delete/<str:item>',notification_delete,name="notification_delete"),
     
-    
-    path('technical_support',technical_support,name="technical_support"),
-    
-    path('technical_support/respond/<str:item>',respond_support,name="respond_support"),
-
-
     path('chat_support/all/',all_chats,name="all_chats"),
     path('chat/visit/<str:item>',visit_chat,name="visit_chat"),
     path('chat/send/<str:item>',send_chat,name="send_chat"),

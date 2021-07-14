@@ -2205,32 +2205,6 @@ def notification_delete(request, item):
         return redirect('notifications')
     return error_detection(request,1)
 
-def technical_support(request):
-    if error_detection(request,1)==False:
-        if request.method=="POST":
-            message=request.POST.get('message')
-            support_id=int(request.POST.get('support_id'))
-            if support_id==0:
-                TechnicalSupportRequest.objects.create(user=request.user, message=message)
-            else:
-                try:
-                    first_support=TechnicalSupportRequest.objects.get(id=int(support_id))
-                except:
-                    return error(request,"Can't Reply on it")
-                if first_support.continued_support==True:
-                    return error(request,"Support details not found")
-                if first_support.user!=request.user:
-                    return error(request,"You never initiated this support message")
-                TechnicalSupportRequest.objects.create(user=request.user, continued_support=True, main_support_id=support_id, message=message)
-            return redirect('technical_support')
-        else:
-            responses=get_my_support_responses(request)
-            support=responses[0]
-            threads=responses[1]
-            if support.count()==0:
-                support="0"
-            return render(request,'dashboard1/technical_support.html',context={"support": support, "threads": threads, "permissions": get_permissions(request)})
-    return error_detection(request,1)
 
 def all_chats(request):
     if error_detection(request,1)==False:
@@ -2426,38 +2400,6 @@ def technical_support_assist(request):
             if support.count()==0:
                 support="0"
             return render(request,'dashboard1/assist_technical_support.html',context={"support": support, "permissions": permissions})
-    return error_detection(request,1)
-
-def get_my_support_responses(request):
-    threads=[]
-    responses=TechnicalSupportRequest.objects.filter(user=request.user, continued_support=False).order_by('-date')
-    for each in responses:
-        thread_responses=TechnicalSupportRequest.objects.filter(continued_support=True, main_support_id=each.id).order_by('date')
-        threads.append(thread_responses)
-    return [responses, threads]
-
-
-
-
-def respond_support(request,item):
-    if error_detection(request,1)==False:
-        if request.user.is_staff==False and request.user.is_superuser==False:
-            return redirect('home')
-        try:
-            permissions=StaffPermissions.objects.get(user=request.user)
-            if permissions.can_manage_technical_support==False:
-                return error(request,"You don't have permission to access this page")
-        except:
-            StaffPermissions.objects.create(user=request.user)
-            return redirect('dashboard')
-        try:
-            support=TechnicalSupportRequest.objects.get(id=int(item))
-        except:
-            return error(request,"Support Details Not Found")
-        if support.continued_support==True:
-            return error(request,"Support Details Not Found")
-        threads=get_all_threads(int(item))
-        return render(request,'dashboard1/show_all_threads.html',context={"support": support, "threads": threads, "permissions": permissions})
     return error_detection(request,1)
 
 def manage_company_internships(request):

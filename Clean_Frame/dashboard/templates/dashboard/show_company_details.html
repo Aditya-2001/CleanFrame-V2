@@ -177,15 +177,16 @@
                                     <label for="internship_name">Internship Name: </label>
                                 </td>
                                 <td>
-                                    <input type="text" style="background-color: aqua;" name="internship_name" value="{{announcement_data.internship.internship_name}}" class="input-field" readonly>
+                                    <input type="text" name="internship_name" value="{{announcement_data.internship.internship_name}}" class="input-field" readonly>
                                 </td>
                             </tr>
                             <tr>
                                 <td>
                                     <label for="round_name">Company Name: </label>
+                                    <p><a href="{% url 'check_company_profile' item=announcement_data.company.id %}">View Company Profile</a></p>
                                 </td>
                                 <td>
-                                    <input type="text" name="round_name" value="{{announcement_data.company}}" class="input-field" readonly>
+                                    <input type="text" name="round_name" value="{{announcement_data.company.first_name}}" class="input-field" readonly>
                                 </td>
                             </tr>
                             <tr>

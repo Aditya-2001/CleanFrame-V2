@@ -782,17 +782,16 @@ def announce_internship(request):
             session=current_session()
             if request.method=="POST":
                 duration=request.POST.get('duration')
-                no_stu=request.POST.get('number_of_students')
                 intern_pos=request.POST.get('internship_position')
                 min_cgpa=request.POST.get('minimum_cgpa')
                 stipend=request.POST.get('stipend')
                 pre=request.POST.get('pre')
                 internship_name=request.POST.get('internship_name')
                 try:
-                    Internship.objects.get(session=session, company=data.original_user, internship_name=internship_name, stipend=stipend, internship_duration=duration, students_required=no_stu, internship_position=intern_pos, minimum_cgpa=min_cgpa, prerequisite=pre)
+                    Internship.objects.get(session=session, company=data.original_user, internship_name=internship_name, stipend=stipend, internship_duration=duration, internship_position=intern_pos, minimum_cgpa=min_cgpa, prerequisite=pre)
                     return JsonResponse({"error": "Internship with same details already exists"}, status=400)
                 except:
-                    Internship.objects.create(session=session, company=data.original_user, internship_name=internship_name, stipend=stipend, internship_duration=duration, students_required=no_stu, internship_position=intern_pos, minimum_cgpa=min_cgpa, prerequisite=pre)
+                    Internship.objects.create(session=session, company=data.original_user, internship_name=internship_name, stipend=stipend, internship_duration=duration, internship_position=intern_pos, minimum_cgpa=min_cgpa, prerequisite=pre)
                     return JsonResponse({"success": "internship created"}, status=200)
             # GO FOR GET METHOD
             return render(request, 'dashboard/new_internship.html', context={"data": data, "session": session})
@@ -803,7 +802,8 @@ def announcements(request):
         if request.user.last_name!=settings.COMPANY_MESSAGE:
             return redirect('home')
         announcements=CompanyAnnouncement.objects.filter(company=CompanyProfile.objects.get(user=request.user).original_user).order_by('announcement_date')
-        return render(request, 'dashboard/announcements.html', context={"announcements": announcements})
+        internships=Internship.objects.filter(company=CompanyProfile.objects.get(user=request.user).original_user)
+        return render(request, 'dashboard/announcements.html', context={"announcements": announcements, "internships": internships})
     return error_detection(request,1)
 
 def internships(request):
@@ -826,7 +826,6 @@ def edit_internship(request, item):
                     return JsonResponse({"error": "Internship Not Found"}, status=400)
                 data.internship_name=request.POST.get('internship_name')
                 data.internship_duration=int(request.POST.get('duration'))
-                data.students_required=int(request.POST.get('number_of_students'))
                 data.internship_position=request.POST.get('internship_position')
                 data.minimum_cgpa=float(request.POST.get('minimum_cgpa'))
                 data.stipend=float(request.POST.get('stipend'))
@@ -1084,7 +1083,6 @@ def all_announcements_with_my_eligibility(request):
     copy=eligible_companies
     data=get_my_profile(request)
     final_list=[]
-
     for each in copy:
         dictionary={}
         dictionary["data"]=each

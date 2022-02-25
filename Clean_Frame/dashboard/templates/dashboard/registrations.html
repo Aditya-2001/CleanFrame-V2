@@ -162,27 +162,26 @@
         <span aria-hidden="true">&times;</span>
       </button>
     </div>
-
-    <select class="form-control" id="session_filter" style="width: 50% !important, text-align: center;" onchange="draw()">
-      <option>All</option>
-      <option>Current Session</option>
-      <option>Selected Intern</option>
-      <option>Cleared</option>
-      <option>Rejected</option>
-      <option>Reverted</option>
-    </select>
     <p id="current_session" style="display: none;">{{session.name}}</p>
     <div class="recent-grid1">
         <div class="projects">
             <div class="card">
                 <div class="card-body">
                     <div class="table-responsive container">
-                        <table id="myTable" class="display nowrap" style="width: 100%">
+                        <select class="form-control" id="session_filter" style="width: 50% !important, text-align: center;" onchange="draw()">
+                          <option>All</option>
+                          <option>Current Session</option>
+                          <option>Selected Intern</option>
+                          <option>Cleared</option>
+                          <option>Rejected</option>
+                          <option>Reverted</option>
+                        </select>
+                        <br>
+                        <table id="myTable" class="display nowrap" style="width: auto">
                             <thead id="thead">
                                 <tr id="tr1" style="text-align: center;">
                                     <td>Session</td>
-                                    <td>Duration (days)</td>
-                                    <td id="td1">Stipend (Rs.)</td>
+                                    <td>Internship Details</td>
                                     <td id="td2">Round Number</td>
                                     <td id="td3">Registration Date</td>
                                     <td id="td4">Result Status</td>
@@ -192,9 +191,7 @@
                                 {% for each in registrations %}
                                 <tr id="tr1" style="text-align: center;">
                                     <td>{{each.company.internship.session.name}}</td>
-                                    <td>{{each.company.internship.internship_duration}}</td>
-                                    <!-- <td><a href="{% url 'show_company_round_details' item=each.company.id %}">{{each.company.id}}</a></td> -->
-                                    <td>{{each.company.internship.stipend}}</td>
+                                    <td><a href="{% url 'show_company_round_details' item=each.company.id %}">{{each.company.internship.internship_name}}</a></td>
                                     <td>{{each.company.internship_round}}</td>
                                     <td>{{each.date_of_registrations}}</td>
 

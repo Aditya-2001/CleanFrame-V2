@@ -41,12 +41,11 @@ class Session(models.Model):
         return self.name
 
 class Internship(models.Model):
-    session=models.ForeignKey(Session, on_delete=models.CASCADE, null=True, blank=True)
-    company=models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
+    session=models.ForeignKey(Session, on_delete=models.SET_NULL, null=True, blank=True)
+    company=models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
     internship_name=models.CharField(max_length=10000, null=True)
     stipend=models.FloatField(default=0, null=True)
     internship_duration=models.IntegerField(default=0, null=True)
-    students_required=models.IntegerField(default=0, null=True)
     internship_position=models.CharField(max_length=100, null=True)
     minimum_cgpa=models.FloatField(default=5.0, null=True)
     prerequisite=models.CharField(max_length=1000000, null=True)
@@ -60,7 +59,7 @@ class Internship(models.Model):
         
 class InternshipFinalResult(models.Model):
     internship=models.ForeignKey(Internship, on_delete=models.CASCADE, null=True, blank=True)
-    company=models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True, related_name='company')
+    company=models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='company')
     student=models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='student')
     
     def __str__(self):

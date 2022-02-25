@@ -160,18 +160,17 @@
                 <div class="card-header">
                     <h3 style="margin-left: 13%;">All Announcements</h3>
                     <button type="button" onclick="toexcel('#myTable')" style="width: 170px; text-align: center;">Export to excel</button>
-                    <!-- <div id="myTable_filter" class="search-wrapper1">
-                <span class="las la-search"></span>
-                <input type="search" aria-controls="myTable" placeholder="Search User">
-              </div> -->
-                    <!-- <button type="button" name="See all">See all <span class="las la-arrow-right"></span></button> -->
                 </div>
                 <div class="card-body">
                     <div class="table-responsive container">
-                        <!-- <div id="myTable_filter" class="search-wrapper1 dataTables_filter">
-                  <span class="las la-search"></span>
-                  <input type="search" aria-controls="myTable" placeholder="Search User">
-                </div> -->
+                          <select class="form-control" id="session_filter" style="width: 50% !important, text-align: center;" onchange="draw()">
+                            <option>All</option>
+                            {% for each in internships %}
+                            <option>{{each.internship_name}}</option>
+                            {% endfor %}
+                          </select>
+
+                          <br>
                         <table id="myTable" class="display" style="width: 100%">
                             <thead id="thead">
                                 <tr id="tr1" style="text-align: center;">
@@ -246,4 +245,8 @@
         </div>
 </main>
 
+<script src="{% static 'ajax/announcements.js' %}"></script>
+{% endblock %}
+
+{% block js_content %}
 {% endblock %}

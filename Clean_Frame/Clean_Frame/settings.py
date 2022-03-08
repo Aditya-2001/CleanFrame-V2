@@ -84,6 +84,26 @@ WSGI_APPLICATION = 'Clean_Frame.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/3.1/ref/settings/#databases
 
+# DATABASE HOSTING LINKS
+# SMARTET_ASP.NET
+
+# USERNAME - cleanframe
+# PASSWORD - cleanframe123@
+
+# DATABASES = {  
+#     'default': {  
+#         'ENGINE': 'django.db.backends.mysql',  
+#         'NAME': 'db_a83e35_intern',  
+#         'USER': 'a83e35_intern',  
+#         'PASSWORD': 'cleanframeDB123@',  
+#         'HOST': 'MYSQL5045.site4now.net',  
+#         # 'PORT': '3306',  
+#         'OPTIONS': {  
+            
+#         }  
+#     }  
+# } 
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
@@ -156,3 +176,4 @@ TEMORARY_BAN_TIME=30
 ENGAGED_EXPIRE_TIME=20
 
 USE_TZ=True
+
